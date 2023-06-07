@@ -10,6 +10,9 @@ if euid != 0:
     os.execlpe('sudo', *args)
 
 print(parted.getAllDevices())
+for device in parted.getAllDevices():
+    print(device)
+    print(device.model + " - " + str(device.length) + " GB (" + device.path + ")")
 device = parted.getDevice("/dev/sdb")
 disk = parted.freshDisk(device, "msdos")
 #disk = parted.newDisk(device)

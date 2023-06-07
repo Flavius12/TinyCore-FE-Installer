@@ -2,8 +2,9 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 class SetUsersPage(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
+        self.installerApp = installerApp
         frame22 = ttk.Frame(self)
         frame22.configure(height=50, width=200)
         frame23 = ttk.Frame(frame22)
@@ -54,3 +55,9 @@ class SetUsersPage(ttk.Frame):
         checkbutton1.pack(anchor="w", padx=75, side="top")
         frame24.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
+
+    def onShow(self):
+        self.installerApp.buttonBack["state"] = "disabled"
+        self.installerApp.buttonNext["state"] = "enabled"
+        self.installerApp.buttonNext["command"] = lambda : self.installerApp.navigateToPage("finishPage")
+        self.installerApp.buttonCancel["state"] = "disabled"

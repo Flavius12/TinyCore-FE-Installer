@@ -2,8 +2,9 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 class FinishPage(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
+        self.installerApp = installerApp
         canvas2 = tk.Canvas(self)
         canvas2.configure(width=240)
         canvas2.pack(anchor="n", expand=False, fill="y", side="left")
@@ -28,3 +29,9 @@ class FinishPage(ttk.Frame):
             pady=15,
             side="right")
         self.pack(side="top")
+
+    def onShow(self):
+        self.installerApp.buttonBack["state"] = "disabled"
+        self.installerApp.buttonNext["text"] = "Fine"
+        self.installerApp.buttonNext["command"] = lambda : self.installerApp.quit()
+        self.installerApp.buttonCancel["state"] = "disabled"

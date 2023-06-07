@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 
 from WelcomePage import WelcomePage
 from DiskFormatPage import DiskFormatPage
@@ -32,36 +33,62 @@ class InstallerApp:
         frame8.pack(expand=True, fill="both", padx=10, pady=5, side="top")
         frame3 = ttk.Frame(self.mainWindow)
         frame3.configure(height=200, width=200)
-        button1 = ttk.Button(frame3)
-        button1.configure(text='Annulla')
-        button1.pack(padx=10, side="right")
-        button2 = ttk.Button(frame3)
-        button2.configure(text='Avanti >')
-        button2.pack(side="right")
-        button3 = ttk.Button(frame3)
-        button3.configure(text='< Indietro')
-        button3.pack(side="right")
+        self.buttonCancel = ttk.Button(frame3)
+        self.buttonCancel.configure(text='Annulla', command=lambda : self.askQuit())
+        self.buttonCancel.pack(padx=10, side="right")
+        self.buttonNext = ttk.Button(frame3)
+        self.buttonNext.configure(text='Avanti >')
+        self.buttonNext.pack(side="right")
+        self.buttonBack = ttk.Button(frame3)
+        self.buttonBack.configure(text='< Indietro')
+        self.buttonBack.pack(side="right")
         frame3.pack(expand=True, fill="both", pady=10, side="top")
+        self.navigateToPage("welcomePage")
 
     def initTabs(self):
         self.notebook = ttk.Notebook(self.mainWindow, style="Tabless.TNotebook")
         self.notebook.configure(height=480, width=640)
-        self.welcomePage = WelcomePage(self, self.notebook)
+        self.pages = {
+            "welcomePage": WelcomePage(self, self.notebook),
+            "diskFormatPage": DiskFormatPage(self, self.notebook),
+            "customDiskFormatPage": CustomDiskFormatPage(self, self.notebook),
+            "installPage": InstallPage(self, self.notebook),
+            "setUsersPage": SetUsersPage(self, self.notebook),
+            "finishPage": FinishPage(self, self.notebook),
+        }
+        for key, value in self.pages.items():
+            self.notebook.add(value, text=key)
+        """ self.welcomePage = 
         self.notebook.add(self.welcomePage, text='Welcome Page')
-        self.diskFormatPage = DiskFormatPage(self, self.notebook)
+        self.diskFormatPage = 
         self.notebook.add(self.diskFormatPage, text='Disk Format Page')
-        self.customDiskFormatPage = CustomDiskFormatPage(self, self.notebook)
+        self.customDiskFormatPage = 
         self.notebook.add(self.customDiskFormatPage, text='Custom Disk Format Page')
-        self.installPage = InstallPage(self, self.notebook)
+        self.installPage = 
         self.notebook.add(self.installPage, text='Install Page')
-        self.setUsersPage = SetUsersPage(self, self.notebook)
+        self.setUsersPage = 
         self.notebook.add(self.setUsersPage, text='Set Users Page')
-        self.finishPage = FinishPage(self, self.notebook)
-        self.notebook.add(self.finishPage, text='Finish Page')
+        self.finishPage = 
+        self.notebook.add(self.finishPage, text='Finish Page') """
         self.notebook.pack(side="top")
+
+    def navigateToPage(self, page):
+        if page in self.pages:
+            self.notebook.select(self.pages[page])
+            self.pages[page].onShow()
+            return True
+        else:
+            return False
 
     def run(self):
         self.mainWindow.mainloop()
+    
+    def quit(self):
+        self.mainWindow.quit()
+
+    def askQuit(self):
+        if messagebox.askquestion("Uscire dall'installazione?", "Vuoi uscire dall'installer di TinyCore Forensics Edition?", icon="warning") == "yes":
+            self.quit()
 
 if __name__ == "__main__":
     app = InstallerApp()

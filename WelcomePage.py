@@ -1,9 +1,11 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 
 class WelcomePage(ttk.Frame):
     def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
+        self.installerApp = installerApp
         canvas1 = tk.Canvas(self)
         canvas1.configure(width=240)
         canvas1.pack(anchor="n", expand=False, fill="y", side="left")
@@ -27,3 +29,8 @@ class WelcomePage(ttk.Frame):
             pady=15,
             side="right")
         self.pack(side="top")
+
+    def onShow(self):
+        self.installerApp.buttonBack["text"] = "Esci"
+        self.installerApp.buttonBack["command"] = lambda : self.installerApp.askQuit()
+        self.installerApp.buttonNext["command"] = lambda : self.installerApp.navigateToPage("diskFormatPage")

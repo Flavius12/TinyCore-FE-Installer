@@ -2,8 +2,10 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 class DiskFormatPage(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
+        self.installerApp = installerApp
+        self.autoDiskFormat = tk.BooleanVar(value=True)
         frame17 = ttk.Frame(self)
         frame17.configure(height=50, width=200)
         frame18 = ttk.Frame(frame17)
@@ -30,18 +32,31 @@ class DiskFormatPage(ttk.Frame):
         label14.configure(
             text='Seleziona il metodo di partizionamento del disco:')
         label14.pack(expand=False, fill="x", padx=50, pady=10, side="top")
-        radiobutton1 = ttk.Radiobutton(frame19)
+        radiobutton1 = ttk.Radiobutton(frame19, variable=self.autoDiskFormat, value=True)
         radiobutton1.configure(text='Automatico (usa intero disco)')
         radiobutton1.pack(anchor="w", padx=75, pady=5, side="top")
-        radiobutton3 = ttk.Radiobutton(frame19)
+        radiobutton3 = ttk.Radiobutton(frame19, variable=self.autoDiskFormat, value=False)
         radiobutton3.configure(text='Manuale')
         radiobutton3.pack(anchor="w", padx=75, pady=5, side="top")
         frame19.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
 
+    def onButtonNextClick(self):
+        if self.autoDiskFormat.get() == True:
+            # TODO AutoFormat
+            self.installerApp.navigateToPage("installPage")
+        else:
+            self.installerApp.navigateToPage("customDiskFormatPage")
+    
+    def onShow(self):
+        self.installerApp.buttonBack["text"] = "< Indietro"
+        self.installerApp.buttonBack["command"] = lambda : self.installerApp.navigateToPage("welcomePage")
+        self.installerApp.buttonNext["command"] = lambda : self.onButtonNextClick()
+
 class CustomDiskFormatPage(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
+        self.installerApp = installerApp
         frame5 = ttk.Frame(self)
         frame5.configure(height=50, width=200)
         frame7 = ttk.Frame(frame5)
@@ -83,3 +98,7 @@ class CustomDiskFormatPage(ttk.Frame):
         frame15.pack(anchor="w", padx=50, pady=10, side="top")
         frame6.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
+
+    def onShow(self):
+        self.installerApp.buttonBack["command"] = lambda : self.installerApp.navigateToPage("diskFormatPage")
+        self.installerApp.buttonNext["command"] = lambda : self.installerApp.navigateToPage("installPage")

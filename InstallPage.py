@@ -2,8 +2,9 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 class InstallPage(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
+        self.installerApp = installerApp
         frame10 = ttk.Frame(self)
         frame10.configure(height=50, width=200)
         frame11 = ttk.Frame(frame10)
@@ -32,3 +33,9 @@ class InstallPage(ttk.Frame):
         progressbar2.pack(fill="x", padx=50, side="top")
         frame12.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
+
+    def onShow(self):
+        self.installerApp.buttonBack["state"] = "disabled"
+        self.installerApp.buttonNext["state"] = "disabled"
+        self.installerApp.buttonCancel["state"] = "disabled"
+        self.installerApp.navigateToPage("setUsersPage")
