@@ -2,6 +2,13 @@ import parted
 import os
 import sys
 
+def sizeof_fmt(num, suffix="B"):
+    for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
+        if abs(num) < 1024.0:
+            return f"{num:3.2f} {unit}{suffix}"
+        num /= 1024.0
+    return f"{num:.2f} Y{suffix}"
+
 euid = os.geteuid()
 if euid != 0:
     print("Script not started as root. Running sudo..")
@@ -12,7 +19,7 @@ if euid != 0:
 print(parted.getAllDevices())
 for device in parted.getAllDevices():
     print(device)
-    print(device.model + " - " + str(device.length) + " GB (" + device.path + ")")
+    print(device.model + " - " + sizeof_fmt(device.length * device.sectorSize) + " (" + device.path + ")")
 device = parted.getDevice("/dev/sdb")
 disk = parted.freshDisk(device, "msdos")
 #disk = parted.newDisk(device)
