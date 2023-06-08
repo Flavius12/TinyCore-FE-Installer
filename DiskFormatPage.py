@@ -1,5 +1,13 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+import parted
+
+def sizeof_fmt(num, suffix="B"):
+    for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
+        if abs(num) < 1024.0:
+            return f"{num:3.2f} {unit}{suffix}"
+        num /= 1024.0
+    return f"{num:.2f} Y{suffix}"
 
 class DiskFormatPage(ttk.Frame):
     def __init__(self, installerApp, parent):
@@ -81,9 +89,25 @@ class CustomDiskFormatPage(ttk.Frame):
         label5.configure(
             text='Seleziona il disco rigido dove installare TinyCore Forensics Edition:')
         label5.pack(expand=False, fill="x", padx=50, pady=10, side="top")
-        treeview1 = ttk.Treeview(frame6)
-        treeview1.configure(selectmode="extended")
-        treeview1.pack(expand=False, fill="x", padx=50, side="top")
+        frame25 = ttk.Frame(frame6)
+        frame25.configure(height=200, width=200)
+        label20 = ttk.Label(frame25)
+        label20.configure(text='Disco di destinazione:')
+        label20.pack(padx=(0, 5), side="left")
+        self.combobox3 = ttk.Combobox(frame25, state="readonly")
+        self.combobox3.pack(expand=True, fill="x", side="left")
+        frame25.pack(fill="x", padx=50, pady=(0, 10), side="top")
+        self.treeview1 = ttk.Treeview(frame6, columns=("C1", "C2", "C3", "C4"), show="headings")
+        self.treeview1.configure(selectmode="extended")
+        self.treeview1.column("#1")
+        self.treeview1.heading("#1", text="Nome", anchor=tk.W)
+        self.treeview1.column("#2")
+        self.treeview1.heading("#2", text="Dimensione", anchor=tk.W)
+        self.treeview1.column("#3")
+        self.treeview1.heading("#3", text="Tipo", anchor=tk.W)
+        self.treeview1.column("#4")
+        self.treeview1.heading("#4", text="Filesystem", anchor=tk.W)
+        self.treeview1.pack(expand=False, fill="x", padx=50, side="top")
         frame15 = ttk.Frame(frame6)
         frame15.configure(height=200, width=200)
         button8 = ttk.Button(frame15)
@@ -98,7 +122,38 @@ class CustomDiskFormatPage(ttk.Frame):
         frame15.pack(anchor="w", padx=50, pady=10, side="top")
         frame6.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
+    
+    def loadDiskInfo(self):
+        print(parted)
+        self.devices = parted.getAllDevices()
+        deviceList = list()
+        for device in self.devices:
+            deviceList.append(device.model + " - " + sizeof_fmt(device.length * device.sectorSize) + " (" + device.path + ")")
+        self.combobox3["values"] = deviceList
+        self.combobox3.current(0)
+
+    def loadPartitions(self, device):
+        try:
+            disk = parted.newDisk(device)
+            for primaryPartition in disk.getPrimaryPartitions():
+                if primaryPartition.fileSystem.type == None:  
+                    fileSystemName = "-"
+                else:
+                    fileSystemName = primaryPartition.fileSystem.type
+                self.treeview1.insert(parent="", index='end', values=(primaryPartition.path, "Primaria", sizeof_fmt(primaryPartition.getSize(unit="b")), fileSystemName))
+            extendedPartition = disk.getExtendedPartition()
+            if extendedPartition:
+                self.treeview1.insert(parent="", index='end', values=(primaryPartition.path, "Estesa", sizeof_fmt(primaryPartition.getSize(unit="b")), "-"))
+        except:
+            for item in self.treeview1.get_children():
+                self.treeview1.delete(item)
+
+    def onDiskComboBoxChange(self, event):
+        self.loadPartitions(self.devices[self.combobox3.current()])
 
     def onShow(self):
         self.installerApp.buttonBack["command"] = lambda : self.installerApp.navigateToPage("diskFormatPage")
         self.installerApp.buttonNext["command"] = lambda : self.installerApp.navigateToPage("installPage")
+        self.loadDiskInfo()
+        self.loadPartitions(self.devices[0])
+        self.combobox3.bind('<<ComboboxSelected>>', self.onDiskComboBoxChange)
