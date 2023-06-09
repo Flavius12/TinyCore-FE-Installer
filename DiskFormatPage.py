@@ -97,8 +97,7 @@ class CustomDiskFormatPage(ttk.Frame):
         self.combobox3 = ttk.Combobox(frame25, state="readonly")
         self.combobox3.pack(expand=True, fill="x", side="left")
         frame25.pack(fill="x", padx=50, pady=(0, 10), side="top")
-        self.treeview1 = ttk.Treeview(frame6, columns=("C1", "C2", "C3", "C4"), show="headings")
-        self.treeview1.configure(selectmode="extended")
+        self.treeview1 = ttk.Treeview(frame6, columns=("C1", "C2", "C3", "C4"), show="headings", selectmode="browse")
         self.treeview1.column("#1")
         self.treeview1.heading("#1", text="Nome", anchor=tk.W)
         self.treeview1.column("#2")
@@ -110,15 +109,15 @@ class CustomDiskFormatPage(ttk.Frame):
         self.treeview1.pack(expand=False, fill="x", padx=50, side="top")
         frame15 = ttk.Frame(frame6)
         frame15.configure(height=200, width=200)
-        button8 = ttk.Button(frame15)
-        button8.configure(text='Nuova partizione...')
-        button8.pack(side="left")
-        button9 = ttk.Button(frame15)
-        button9.configure(text='Formatta...')
-        button9.pack(side="left")
-        button10 = ttk.Button(frame15)
-        button10.configure(text='Elimina...')
-        button10.pack(side="left")
+        self.buttonNewPartition = ttk.Button(frame15)
+        self.buttonNewPartition.configure(text='Nuova partizione...')
+        self.buttonNewPartition.pack(side="left")
+        self.buttonFormatPartition = ttk.Button(frame15)
+        self.buttonFormatPartition.configure(text='Formatta...')
+        self.buttonFormatPartition.pack(side="left")
+        self.buttonDeletePartition = ttk.Button(frame15)
+        self.buttonDeletePartition.configure(text='Elimina...')
+        self.buttonDeletePartition.pack(side="left")
         frame15.pack(anchor="w", padx=50, pady=10, side="top")
         frame6.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
@@ -133,6 +132,8 @@ class CustomDiskFormatPage(ttk.Frame):
         self.combobox3.current(0)
 
     def loadPartitions(self, device):
+        for item in self.treeview1.get_children():
+                self.treeview1.delete(item)
         try:
             disk = parted.newDisk(device)
             for primaryPartition in disk.getPrimaryPartitions():
@@ -150,6 +151,16 @@ class CustomDiskFormatPage(ttk.Frame):
 
     def onDiskComboBoxChange(self, event):
         self.loadPartitions(self.devices[self.combobox3.current()])
+        self.buttonFormatPartition["state"] = "disabled"
+        self.buttonDeletePartition["state"] = "disabled"
+
+    def onDiskTreeViewSelect(self, event):
+        if self.treeview1.selection():
+            self.buttonFormatPartition["state"] = "enabled"
+            self.buttonDeletePartition["state"] = "enabled"
+        else:
+            self.buttonFormatPartition["state"] = "disabled"
+            self.buttonDeletePartition["state"] = "disabled"
 
     def onShow(self):
         self.installerApp.buttonBack["command"] = lambda : self.installerApp.navigateToPage("diskFormatPage")
@@ -157,3 +168,8 @@ class CustomDiskFormatPage(ttk.Frame):
         self.loadDiskInfo()
         self.loadPartitions(self.devices[0])
         self.combobox3.bind('<<ComboboxSelected>>', self.onDiskComboBoxChange)
+        self.treeview1.bind("<<TreeviewSelect>>", self.onDiskTreeViewSelect)
+
+class NewPartitionDialog(ttk.Frame):
+    def __init__(self, parent):
+        pass
