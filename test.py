@@ -51,5 +51,6 @@ for partition in partitionList:
     elif partition[0] == 2:
         print("FREE")
     print(partition[1])
+    print(partition[1].type)
     print(sizeof_fmt(partition[1].getSize(unit="b")))
 print()
