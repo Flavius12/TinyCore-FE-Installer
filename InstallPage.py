@@ -34,8 +34,9 @@ class InstallPage(ttk.Frame):
         frame12.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
 
-    def onShow(self):
+    def onShow(self, params):
         self.installerApp.buttonBack["state"] = "disabled"
         self.installerApp.buttonNext["state"] = "disabled"
         self.installerApp.buttonCancel["state"] = "disabled"
-        self.installerApp.navigateToPage("setUsersPage")
+        print("DISK: " + params[0] + " PART: " + params[1])
+        #self.installerApp.navigateToPage("setUsersPage")

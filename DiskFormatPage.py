@@ -7,6 +7,11 @@ PRIMARY = 0
 EXTENDED = 1
 FREE = 2
 
+#TODO Autoformat
+#TODO New partitions
+#TODO Format ext3 && rebuildfstab (does parted do this?)
+#TODO Auto format if "Avanti >" on Unallocated Space
+
 def getPartitions(disk):
     partitionList = list()
     for primaryPartition in disk.getPrimaryPartitions():
@@ -73,7 +78,7 @@ class DiskFormatPage(ttk.Frame):
         else:
             self.installerApp.navigateToPage("customDiskFormatPage")
     
-    def onShow(self):
+    def onShow(self, params):
         self.installerApp.buttonBack["text"] = "< Indietro"
         self.installerApp.buttonBack["command"] = lambda : self.installerApp.navigateToPage("welcomePage")
         self.installerApp.buttonNext["command"] = lambda : self.onButtonNextClick()
@@ -200,9 +205,24 @@ class CustomDiskFormatPage(ttk.Frame):
             self.disks[self.combobox3.current()].deletePartition(self.partitionList[self.treeview1.item(self.treeview1.focus())['tags'][0]][1])
             self.loadPartitions(self.disks[self.combobox3.current()]) #Update partitions TreeView
 
-    def onShow(self):
+    def onButtonNextClick(self):
+        if self.treeview1.selection():
+            selectedPartition = self.partitionList[self.treeview1.item(self.treeview1.focus())['tags'][0]]
+            if selectedPartition[0] == PRIMARY or selectedPartition[0] == FREE:
+                if selectedPartition[0] == FREE: #Format the partition now
+                    pass #TODO Program later
+                else:
+                    if messagebox.askquestion("Scrivere le modifiche sul disco?", "Proseguendo, si procederà con il partizionamento del disco {} e l'installazione del sistema sulla partizione {}. Continuare?\nATTENZIONE: TUTTI I DATI PRESENTI SUL DISCO SARANNO CANCELLATI".format(self.disks[self.combobox3.current()].device.path, selectedPartition[1].path), icon="warning") == "yes":
+                        self.disks[self.combobox3.current()].commit()
+                        self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()].device.path, selectedPartition[1].path))
+            else:
+                messagebox.showerror("Partizione non valida", "Il sistema può essere installato solo su partizioni primarie")
+        else:
+            messagebox.showerror("Nessuna partizione selezionata", "Selezionare la partizione in cui si desidera installare il sistema")
+
+    def onShow(self, params):
         self.installerApp.buttonBack["command"] = lambda : self.installerApp.navigateToPage("diskFormatPage")
-        self.installerApp.buttonNext["command"] = lambda : self.installerApp.navigateToPage("installPage")
+        self.installerApp.buttonNext["command"] = lambda : self.onButtonNextClick()
         self.buttonNewPartition["command"] = lambda : self.onButtonNewPartitionClick()
         self.buttonDeletePartition["command"] = lambda : self.onButtonDeletePartitionClick()
         self.loadDiskInfo()
@@ -214,6 +234,7 @@ class NewPartitionDialog(tk.Toplevel):
     def __init__(self, parent, partition):
         super().__init__(parent)
         self.response = False
+        self.startSector = partition.geometry.start
         self.primaryPartition = tk.BooleanVar(value=True)
         self.partitionSize = tk.StringVar(value=partition.getSize(unit="MB"))
         self.posX = parent.winfo_x() + (parent.winfo_width() / 2 - 345 / 2)

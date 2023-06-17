@@ -72,10 +72,10 @@ class InstallerApp:
         self.notebook.add(self.finishPage, text='Finish Page') """
         self.notebook.pack(side="top")
 
-    def navigateToPage(self, page):
+    def navigateToPage(self, page, params=None):
         if page in self.pages:
             self.notebook.select(self.pages[page])
-            self.pages[page].onShow()
+            self.pages[page].onShow(params)
             return True
         else:
             return False

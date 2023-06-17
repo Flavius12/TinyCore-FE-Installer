@@ -56,7 +56,7 @@ class SetUsersPage(ttk.Frame):
         frame24.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
 
-    def onShow(self):
+    def onShow(self, params):
         self.installerApp.buttonBack["state"] = "disabled"
         self.installerApp.buttonNext["state"] = "enabled"
         self.installerApp.buttonNext["command"] = lambda : self.installerApp.navigateToPage("finishPage")

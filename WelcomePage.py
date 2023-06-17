@@ -30,7 +30,7 @@ class WelcomePage(ttk.Frame):
             side="right")
         self.pack(side="top")
 
-    def onShow(self):
+    def onShow(self, params):
         self.installerApp.buttonBack["text"] = "Esci"
         self.installerApp.buttonBack["command"] = lambda : self.installerApp.askQuit()
         self.installerApp.buttonNext["command"] = lambda : self.installerApp.navigateToPage("diskFormatPage")
