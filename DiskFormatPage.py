@@ -144,7 +144,6 @@ class CustomDiskFormatPage(ttk.Frame):
         self.pack(side="top")
     
     def loadDiskInfo(self):
-        print(parted)
         self.devices = parted.getAllDevices()
         self.disks = list()
         deviceList = list()
@@ -165,7 +164,7 @@ class CustomDiskFormatPage(ttk.Frame):
             self.partitionList = getPartitions(disk)
             for i, partition in enumerate(self.partitionList):
                 if partition[0] == PRIMARY:
-                    if partition[1].fileSystem.type == None:  
+                    if partition[1].fileSystem == None:  
                         fileSystemName = "-"
                     else:
                         fileSystemName = partition[1].fileSystem.type
@@ -208,13 +207,18 @@ class CustomDiskFormatPage(ttk.Frame):
     def onButtonNextClick(self):
         if self.treeview1.selection():
             selectedPartition = self.partitionList[self.treeview1.item(self.treeview1.focus())['tags'][0]]
-            if selectedPartition[0] == PRIMARY or selectedPartition[0] == FREE:
-                if selectedPartition[0] == FREE: #Format the partition now
-                    pass #TODO Program later
-                else:
-                    if messagebox.askquestion("Scrivere le modifiche sul disco?", "Proseguendo, si procederà con il partizionamento del disco {} e l'installazione del sistema sulla partizione {}. Continuare?\nATTENZIONE: TUTTI I DATI PRESENTI SUL DISCO SARANNO CANCELLATI".format(self.disks[self.combobox3.current()].device.path, selectedPartition[1].path), icon="warning") == "yes":
-                        self.disks[self.combobox3.current()].commit()
-                        self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()].device.path, selectedPartition[1].path))
+            if selectedPartition[0] == PRIMARY:
+                if messagebox.askquestion("Scrivere le modifiche sul disco?", "Proseguendo, si procederà con il partizionamento del disco {} e l'installazione del sistema sulla partizione {}. Continuare?\nATTENZIONE: TUTTI I DATI PRESENTI SUL DISCO SARANNO CANCELLATI".format(self.disks[self.combobox3.current()].device.path, selectedPartition[1].path), icon="warning") == "yes":
+                    self.disks[self.combobox3.current()].commit()
+                    self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()].device.path, selectedPartition[1].path, None))
+            elif selectedPartition[0] == FREE: #Format the partition now
+                if messagebox.askquestion("Scrivere le modifiche sul disco?", "Proseguendo, si procederà con il partizionamento del disco {} e l'installazione del sistema sulla partizione selezionata. Continuare?\nATTENZIONE: TUTTI I DATI PRESENTI SUL DISCO SARANNO CANCELLATI".format(self.disks[self.combobox3.current()].device.path), icon="warning") == "yes":
+                    fileSystem = parted.FileSystem(type="ext3", geometry=selectedPartition[1].geometry)
+                    partition = parted.Partition(disk=self.disks[self.combobox3.current()], type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=selectedPartition[1].geometry)
+                    self.disks[self.combobox3.current()].addPartition(partition=partition, constraint=self.disks[self.combobox3.current()].device.optimalAlignedConstraint)
+                    partition.setFlag(parted.PARTITION_BOOT)
+                    self.disks[self.combobox3.current()].commit()
+                    self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()].device.path, partition.path, "ext3"))
             else:
                 messagebox.showerror("Partizione non valida", "Il sistema può essere installato solo su partizioni primarie")
         else:

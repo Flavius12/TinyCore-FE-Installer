@@ -27,7 +27,6 @@ print(device.length * device.sectorSize)
 print(disk.maxPrimaryPartitionCount)
 partitionList = list()
 for primaryPartition in disk.getPrimaryPartitions():
-    parted.Partition().geometry.
     #print("Primary")
     #print("Name: " + primaryPartition.path + " Type: Primary " + "Size: " + sizeof_fmt(primaryPartition.getSize(unit="b")) + " Filesystem: " + primaryPartition.fileSystem.type)
     #print(primaryPartition)
