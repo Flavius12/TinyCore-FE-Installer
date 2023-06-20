@@ -30,7 +30,7 @@ class FinishPage(ttk.Frame):
             side="right")
         self.pack(side="top")
 
-    def onShow(self):
+    def onShow(self, params):
         self.installerApp.buttonBack["state"] = "disabled"
         self.installerApp.buttonNext["text"] = "Fine"
         self.installerApp.buttonNext["command"] = lambda : self.installerApp.quit()

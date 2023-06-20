@@ -5,6 +5,9 @@ class SetUsersPage(ttk.Frame):
     def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
         self.installerApp = installerApp
+        self.username = tk.StringVar(value="tc")
+        self.password = tk.StringVar()
+        self.showPassword = tk.BooleanVar(value=False)
         frame22 = ttk.Frame(self)
         frame22.configure(height=50, width=200)
         frame23 = ttk.Frame(frame22)
@@ -33,7 +36,7 @@ class SetUsersPage(ttk.Frame):
         label25 = ttk.Label(frame24)
         label25.configure(text='Nome utente:')
         label25.pack(anchor="w", padx=75, side="top")
-        entry6 = ttk.Entry(frame24)
+        entry6 = ttk.Entry(frame24, textvariable=self.username)
         entry6.pack(anchor="w", fill="x", padx=75, pady=10, side="top")
         label26 = ttk.Label(frame24)
         label26.configure(
@@ -43,18 +46,28 @@ class SetUsersPage(ttk.Frame):
         label27 = ttk.Label(frame24)
         label27.configure(text='Password:')
         label27.pack(anchor="w", padx=75, side="top")
-        entry7 = ttk.Entry(frame24)
-        entry7.pack(anchor="w", fill="x", padx=75, pady=10, side="top")
+        self.entryPassword = ttk.Entry(frame24, show="\u2022", textvariable=self.password)
+        self.entryPassword.pack(anchor="w", fill="x", padx=75, pady=10, side="top")
         label28 = ttk.Label(frame24)
         label28.configure(text='Conferma password:')
         label28.pack(anchor="w", padx=75, side="top")
-        entry8 = ttk.Entry(frame24)
-        entry8.pack(anchor="w", fill="x", padx=75, pady=10, side="top")
-        checkbutton1 = ttk.Checkbutton(frame24)
-        checkbutton1.configure(text='Mostra password')
-        checkbutton1.pack(anchor="w", padx=75, side="top")
+        self.entryConfirmPassword = ttk.Entry(frame24, show="\u2022")
+        self.entryConfirmPassword.pack(anchor="w", fill="x", padx=75, pady=10, side="top")
+        self.checkbutton1 = ttk.Checkbutton(frame24, variable=self.showPassword)
+        self.checkbutton1.configure(text='Mostra password')
+        self.checkbutton1.pack(anchor="w", padx=75, side="top")
+        self.checkbutton1["command"] = lambda : self.onCheckBoxShowPasswordClick()
         frame24.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
+
+    def onCheckBoxShowPasswordClick(self):
+        if self.showPassword.get() == True:
+            self.entryPassword["show"] = ''
+            self.entryConfirmPassword["show"] = ''
+        else:
+            self.entryPassword["show"] = "\u2022"
+            self.entryConfirmPassword["show"] = "\u2022"
+
 
     def onShow(self, params):
         self.installerApp.buttonBack["state"] = "disabled"

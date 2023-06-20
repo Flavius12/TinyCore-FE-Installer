@@ -148,12 +148,13 @@ class CustomDiskFormatPage(ttk.Frame):
         self.disks = list()
         deviceList = list()
         for device in self.devices:
-            #Load Disk
-            try:
-                self.disks.append(parted.newDisk(device))
-            except:
-                self.disks.append(parted.freshDisk(device, "msdos"))
-            deviceList.append(device.model + " - " + sizeof_fmt(device.length * device.sectorSize) + " (" + device.path + ")")
+            if device.readOnly == False:
+                #Load Disk
+                try:
+                    self.disks.append(parted.newDisk(device))
+                except:
+                    self.disks.append(parted.freshDisk(device, "msdos"))
+                deviceList.append(device.model + " - " + sizeof_fmt(device.length * device.sectorSize) + " (" + device.path + ")")
         self.combobox3["values"] = deviceList
         self.combobox3.current(0)
 

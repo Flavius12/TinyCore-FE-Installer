@@ -52,5 +52,6 @@ for partition in partitionList:
         print("FREE")
     print(partition[1])
     print(partition[1].type)
+    print(os.path.basename(partition[1].path))
     print(sizeof_fmt(partition[1].getSize(unit="b")))
 print()

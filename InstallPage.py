@@ -2,6 +2,7 @@ from threading import Thread
 import tkinter as tk
 import tkinter.ttk as ttk
 import os
+import shutil
 import time
 
 class InstallPage(ttk.Frame):
@@ -43,35 +44,34 @@ class InstallPage(ttk.Frame):
         self.installerApp.buttonNext["state"] = "disabled"
         self.installerApp.buttonCancel["state"] = "disabled"
         print("DISK: " + params[0] + " PART: " + params[1])
+        installPartitionBasename = os.path.basename(params[1])
         if params[2] != None:
             self.actions.append(Command("mkfs.{} {}".format(params[2], params[1]), "Formattazione di {}".format(params[1])))
-        self.actions.append(Command("mount {}".format(params[1]), "Montaggio della partizione {}".format(params[1])))
-        self.actions.append(Command("mount /dev/hdc", "Montaggio del disco di installazione"))
-        self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "{}/gui.py".format(params[1]))))                 
-        #self.installerApp.navigateToPage("setUsersPage")
-        self.progressBar["maximum"] = 3
-        self.installThread = InstallThread(self.labelProgress, self.progressBar, self.actions)
+        self.actions.append(Mount(installPartitionBasename))
+        self.actions.append(Mount(installPartitionBasename, "Montaggio del disco di installazione")) #TODO DISK instead of installPartitionBasename
+        self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "/mnt/{}/gui.py".format(installPartitionBasename))))                 
+        self.progressBar["maximum"] = len(self.actions)
+        self.installThread = InstallThread(self)
         self.installThread.start()
+    
+    def onFinishInstall(self):
+        self.installerApp.navigateToPage("setUsersPage")
 
 class InstallThread(Thread):
-    def __init__(self, labelProgress, progressBar, actions):
+    def __init__(self, installPage):
         Thread.__init__(self)
-        self.labelProgress = labelProgress
-        self.progressBar = progressBar
-        self.actions = actions
+        self.installPage = installPage
     
     def run(self):
-        for item in self.actions:
-            self.labelProgress["text"] = item.description
-            print(item.description)
+        for item in self.installPage.actions:
+            self.installPage.labelProgress["text"] = item.description
             item.execute()
-            print("sTEP")
-            self.progressBar["value"] += 1
+            self.installPage.progressBar["value"] += 1
             time.sleep(1)
-            
+        self.installPage.onFinishInstall()
 
 class Action:
-    def __init__(self, params, description):
+    def __init__(self, params, description=""):
         self._params = params
         self.description = description
     def execute(self):
@@ -81,17 +81,48 @@ class Command(Action):
     def execute(self):
         return os.system(self._params)
     
-class MkDir(Action):
-    def __init__(self, params):
-        super().__init__(self, params, "Creazione della cartella {}".format(params))
+
+class Mount(Action):
+    def __init__(self, params, description=""):
+        if description == "":
+            super().__init__(params, "Montaggio della partizione /dev/{}".format(params))
+        else:
+            super().__init__(params, description)
+
     def execute(self):
-        pass #TODO MkDir Command
+        Mkdir("/mnt/{}".format(self._params)).execute()
+        Command("mount /dev/{} /mnt/{}".format(self._params, self._params)).execute()
+
+class Unmount(Action):
+    def __init__(self, params, description=""):
+        if description == "":
+            super().__init__(params, "Smontaggio della partizione /dev/{}".format(params))
+        else:
+            super().__init__(params, description)
+
+    def execute(self):
+        Command("umount /mnt/{}".format(self._params)).execute()
+        Rmdir("/mnt/{}".format(self._params)).execute()
     
+class Mkdir(Action):
+    def __init__(self, params):
+        super().__init__(params, "Creazione della cartella {}".format(params))
+    def execute(self):
+        if os.path.isdir(self._params) == False:
+            os.mkdir(self._params)
+    
+class Rmdir(Action):
+    def __init__(self, params):
+        super().__init__(params, "Rimozione della cartella {}".format(params))
+    def execute(self):
+        if os.path.isdir(self._params) == True:
+            os.rmdir(self._params)
+
 class Copy(Action):
     def __init__(self, params):
         super().__init__(params, "Copia di {}".format(os.path.basename(params[0])))
     def execute(self):
-        pass #TODO Copy Command
+        shutil.copy(self._params[0], self._params[1])
 
 class GrubConfigure(Action):
     def __init__(self, params):
