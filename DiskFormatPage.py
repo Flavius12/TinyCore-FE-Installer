@@ -20,9 +20,19 @@ def getPartitions(disk):
         partitionList.append((PRIMARY, primaryPartition))
     if disk.getExtendedPartition():
         partitionList.append((EXTENDED, disk.getExtendedPartition()))
+    partitionList.sort(key=lambda item: item[1].geometry.start)
+    partitionsPrimaryExtendedOnly = list(filter(lambda item : item[0] == 0 or item[0] == 1, partitionList))
     for freePartition in disk.getFreeSpacePartitions():
-        if freePartition.geometry.end > 2048:
-            partitionList.append((FREE, freePartition))
+        if not partitionsPrimaryExtendedOnly: # No partitions found
+            partitionList.append((2, freePartition))
+        elif freePartition.geometry.end < partitionsPrimaryExtendedOnly[0][1].geometry.start:
+            if partitionsPrimaryExtendedOnly[0][1].geometry.start > (1024 * 1024 / disk.device.sectorSize):
+                partitionList.append((2, freePartition))
+        elif freePartition.geometry.end > partitionsPrimaryExtendedOnly[-1][1].geometry.end:
+            if (disk.device.length - 1 - partitionsPrimaryExtendedOnly[-1][1].geometry.end) >= (1024 * 1024 / disk.device.sectorSize):
+                partitionList.append((2, freePartition))
+        else:
+            partitionList.append((2, freePartition))
     partitionList.sort(key=lambda item: item[1].geometry.start)
     return partitionList
 

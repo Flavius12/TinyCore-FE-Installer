@@ -29,7 +29,7 @@ if euid != 0:
     input()
 '''
 
-device = parted.getDevice("/dev/sdb")
+device = parted.getDevice("/dev/sda")
 #disk = parted.freshDisk(device, "msdos")
 disk = parted.newDisk(device)
 print(device.length * device.sectorSize)
@@ -45,17 +45,20 @@ if disk.getExtendedPartition():
     #print("Extended:")
     #print(disk.getExtendedPartition())
     partitionList.append((1, disk.getExtendedPartition()))
-largestUnallocSize = -1;
-currentSize = 0
+partitionList.sort(key=lambda item: item[1].geometry.start)
+partitionsPrimaryExtendedOnly = list(filter(lambda item : item[0] == 0 or item[0] == 1, partitionList))
 for freePartition in disk.getFreeSpacePartitions():
     #print("Free:")
     #print(freePartition)
     #print(freePartition.geometry)
     #print(sizeof_fmt(freePartition.getSize(unit="b")))
-    print(freePartition.fileSystem)
-    partitionList.append((2, freePartition))
+    if not partitionsPrimaryExtendedOnly: # No partitions found
+        partitionList.append((2, freePartition))
+    elif freePartition.geometry.end < partitionsPrimaryExtendedOnly[0][1].geometry.start and partitionsPrimaryExtendedOnly[0][1].geometry.start > (1024 * 1024 / device.sectorSize):
+        partitionList.append((2, freePartition))
+    elif freePartition.geometry.end > partitionsPrimaryExtendedOnly[-1][1].geometry.end and (device.length - 1 - partitionsPrimaryExtendedOnly[-1][1].geometry.end) >= (1024 * 1024 / device.sectorSize):
+        partitionList.append((2, freePartition))
 partitionList.sort(key=lambda item: item[1].geometry.start)
-os.system("clear")
 for partition in partitionList:
     print("------")
     if partition[0] == 0:
