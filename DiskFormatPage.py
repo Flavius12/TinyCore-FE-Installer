@@ -2,6 +2,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
 import parted
+import os
+import re
 
 PRIMARY = 0
 EXTENDED = 1
@@ -143,12 +145,12 @@ class CustomDiskFormatPage(ttk.Frame):
         frame6.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
     
-    def loadDiskInfo(self):
+    def loadDisksInfo(self):
         self.devices = parted.getAllDevices()
         self.disks = list()
         deviceList = list()
         for device in self.devices:
-            if device.readOnly == False:
+            if device.readOnly == False and re.match("^([^0-9]+)$", os.path.basename(device.path)): # Exclude readonly devices and CD/DVDs
                 #Load Disk
                 try:
                     self.disks.append(parted.newDisk(device))
@@ -230,7 +232,7 @@ class CustomDiskFormatPage(ttk.Frame):
         self.installerApp.buttonNext["command"] = lambda : self.onButtonNextClick()
         self.buttonNewPartition["command"] = lambda : self.onButtonNewPartitionClick()
         self.buttonDeletePartition["command"] = lambda : self.onButtonDeletePartitionClick()
-        self.loadDiskInfo()
+        self.loadDisksInfo()
         self.loadPartitions(self.disks[0])
         self.combobox3.bind('<<ComboboxSelected>>', self.onDiskComboBoxChange)
         self.treeview1.bind("<<TreeviewSelect>>", self.onDiskTreeViewSelect)
