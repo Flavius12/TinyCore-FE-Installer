@@ -9,10 +9,7 @@ PRIMARY = 0
 EXTENDED = 1
 FREE = 2
 
-#TODO Autoformat
 #TODO New partitions
-#TODO Format ext3 && rebuildfstab (does parted do this?)
-#TODO Auto format if "Avanti >" on Unallocated Space
 
 def getPartitions(disk):
     partitionList = list()

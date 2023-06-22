@@ -5,6 +5,10 @@ import os
 import shutil
 import time
 
+#TODO Copy necessary files
+#TODO Install GRUB
+#TODO Test GRUB menu.lst file
+
 class InstallPage(ttk.Frame):
     def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
@@ -49,7 +53,8 @@ class InstallPage(ttk.Frame):
             self.actions.append(Command("mkfs.{} {}".format(params[2], params[1]), "Formattazione di {}".format(params[1])))
         self.actions.append(Mount(installPartitionBasename))
         self.actions.append(Mount(installPartitionBasename, "Montaggio del disco di installazione")) #TODO DISK instead of installPartitionBasename
-        self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "/mnt/{}/gui.py".format(installPartitionBasename))))                 
+        self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "/mnt/{}/gui.py".format(installPartitionBasename))))
+        self.actions.append(GrubConfigure("/mnt/" + installPartitionBasename))               
         self.progressBar["maximum"] = len(self.actions)
         self.installThread = InstallThread(self)
         self.installThread.start()
@@ -126,11 +131,12 @@ class Copy(Action):
 
 class GrubConfigure(Action):
     def __init__(self, params):
-        super().__init__(self, params, "Configurazione del bootloader grub")
+        super().__init__(params, "Configurazione del bootloader grub")
     def execute(self):
-        pass #TODO Create menu.lst file 
-        # default 0
-        # timeout 10
-        # title tinycore
-        # kernel /boot/bzImage quiet
-        # initrd /boot/tinycore.gz
+        grubConfigFile = open("{}/menu.lst".format(self._params), "w")
+        grubConfigFile.write("default 0\n")
+        grubConfigFile.write("timeout 10\n")
+        grubConfigFile.write("title tinycore\n") #TODO Proper title
+        grubConfigFile.write("kernel /boot/bzImage quiet\n")
+        grubConfigFile.write("initrd /boot/tinycore.gz\n")
+        grubConfigFile.close()
