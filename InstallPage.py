@@ -5,9 +5,9 @@ import os
 import shutil
 import time
 
-#TODO Copy necessary files
-#TODO Install GRUB
-#TODO Test GRUB menu.lst file
+#TODO Copy necessary files (only forensics tools part missing)
+#TODO Desktop wallpaper install
+#TODO GRUB wallpaper install
 
 class InstallPage(ttk.Frame):
     def __init__(self, installerApp, parent):
@@ -154,7 +154,8 @@ class GrubConfigure(Action):
         grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params), "w")
         grubConfigFile.write("insmod ext3\n")
         grubConfigFile.write("menuentry \"TinyCore Forensics Edition\"{\n")
-        grubConfigFile.write("\tlinux=/boot/bzImage quiet opt={} home={} tce={}\n".format(self._params, self._params, self._params)) 
-        grubConfigFile.write("\tinitrd=/boot/core.gz\n")
+        grubConfigFile.write("\troot=(hd1,msdos3)\n") #TODO Parametrize hd1 and msdos3!!!
+        grubConfigFile.write("\tlinux /boot/bzImage quiet opt={} home={} tce={}\n".format(self._params, self._params, self._params)) 
+        grubConfigFile.write("\tinitrd /boot/core.gz\n")
         grubConfigFile.write("}")
         grubConfigFile.close()
