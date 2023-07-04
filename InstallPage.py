@@ -63,12 +63,13 @@ class InstallPage(ttk.Frame):
         self.actions.append(Mount(installPartitionBasename, "Montaggio del disco di installazione")) #TODO DISK instead of installPartitionBasename
         self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "/mnt/{}/gui.py".format(installPartitionBasename))))
         # Scan files from CD
-        '''for file in self.recursiveListFiles(sourceDisk):
+        for file in self.recursiveListFiles(sourceDisk):
             relPath = os.path.relpath(file, sourceDisk)
-            self.actions.append(Copy((file, "/mnt/{}/{}".format(installPartitionBasename, relPath))))'''
+            self.actions.append(Copy((file, "/mnt/{}/{}".format(installPartitionBasename, relPath))))
+        self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(installPartitionBasename, params[0]), "Esecuzione di grub-install"))
         self.actions.append(Mkdir("/mnt/{}/boot/grub".format(installPartitionBasename)))
         self.actions.append(GrubConfigure("/mnt/{}".format(installPartitionBasename)))
-        self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot /dev/{}").format(installPartitionBasename, params[0]), "Esecuzione di grub-install")
+        self.actions.append(Command("update-grub", "Esecuzione di update-grub"))
         self.progressBar["maximum"] = len(self.actions)
         self.installThread = InstallThread(self)
         self.installThread.start()
@@ -86,7 +87,7 @@ class InstallThread(Thread):
             self.installPage.labelProgress["text"] = item.description
             item.execute()
             self.installPage.progressBar["value"] += 1
-            time.sleep(1)
+            #time.sleep(1) #TODO REMOVE LATER
         self.installPage.onFinishInstall()
 
 class Action:
@@ -141,7 +142,6 @@ class Copy(Action):
     def __init__(self, params):
         super().__init__(params, "Copia di {}".format(os.path.basename(params[0])))
     def execute(self):
-        print("COPY {} -> {}".format(self._params[0], self._params[1]))
         os.makedirs(os.path.dirname(self._params[1]), exist_ok=True)
         shutil.copy(self._params[0], self._params[1])
 
