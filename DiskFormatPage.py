@@ -33,7 +33,7 @@ def getPartitions(disk):
     partitionList.sort(key=lambda item: item[1].geometry.start)
     return partitionList
 
-def sizeof_fmt(num, suffix="B"):
+def formatBytes(num, suffix="B"):
     for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
         if abs(num) < 1024.0:
             return f"{num:3.2f} {unit}{suffix}"
@@ -163,7 +163,7 @@ class CustomDiskFormatPage(ttk.Frame):
                     self.disks.append(parted.newDisk(device))
                 except:
                     self.disks.append(parted.freshDisk(device, "msdos"))
-                deviceList.append(device.model + " - " + sizeof_fmt(device.length * device.sectorSize) + " (" + device.path + ")")
+                deviceList.append(device.model + " - " + formatBytes(device.length * device.sectorSize) + " (" + device.path + ")")
         self.combobox3["values"] = deviceList
         self.combobox3.current(0)
 
@@ -178,11 +178,11 @@ class CustomDiskFormatPage(ttk.Frame):
                         fileSystemName = "-"
                     else:
                         fileSystemName = partition[1].fileSystem.type
-                    self.treeview1.insert(parent="", index='end', values=(partition[1].path, sizeof_fmt(partition[1].getSize(unit="b")), "Primaria", fileSystemName), tags=i)
+                    self.treeview1.insert(parent="", index='end', values=(partition[1].path, formatBytes(partition[1].getSize(unit="b")), "Primaria", fileSystemName), tags=i)
                 elif partition[0] == EXTENDED:
-                    self.treeview1.insert(parent="", index='end', values=(partition[1].path, sizeof_fmt(partition[1].getSize(unit="b")), "Estesa", "-"), tags=i)
+                    self.treeview1.insert(parent="", index='end', values=(partition[1].path, formatBytes(partition[1].getSize(unit="b")), "Estesa", "-"), tags=i)
                 else:
-                    self.treeview1.insert(parent="", index="end", values=("Spazio non allocato", sizeof_fmt(partition[1].getSize(unit="b")), "-", "-"), tags=i)
+                    self.treeview1.insert(parent="", index="end", values=("Spazio non allocato", formatBytes(partition[1].getSize(unit="b")), "-", "-"), tags=i)
         except:
             for item in self.treeview1.get_children():
                 self.treeview1.delete(item)

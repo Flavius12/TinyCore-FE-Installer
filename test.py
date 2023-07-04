@@ -85,6 +85,6 @@ def rec_listdir(path, fileList=[]):
 
 #print(rec_listdir("/media/flavius12/TinyCore/boot"))
 
-for root, dirs, files in os.walk("/media/flavius12/TinyCore"):
+for root, dirs, files in os.walk("/media/flavius12/TinyCore/cde"):
     for file in files:
-        print(os.path.relpath(os.path.normpath(os.path.join(root, file)), "/media/flavius12/TinyCore"))
+        print(os.path.relpath(os.path.normpath(os.path.join(root, file)), "/media/flavius12/TinyCore/cde"))
