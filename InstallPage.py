@@ -155,7 +155,7 @@ class GrubConfigure(Action):
         grubConfigFile.write("insmod ext3\n")
         grubConfigFile.write("menuentry \"TinyCore Forensics Edition\"{\n")
         grubConfigFile.write("\troot=(hd1,msdos3)\n") #TODO Parametrize hd1 and msdos3!!!
-        grubConfigFile.write("\tlinux /boot/bzImage quiet opt={} home={} tce={}\n".format(self._params, self._params, self._params)) 
+        grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt={} home={} tce={}\n".format(self._params, self._params, self._params)) 
         grubConfigFile.write("\tinitrd /boot/core.gz\n")
         grubConfigFile.write("}")
         grubConfigFile.close()
