@@ -70,7 +70,7 @@ class InstallPage(ttk.Frame):
             self.actions.append(Copy((file, "/mnt/{}/tce/{}".format(installPartitionBasename, relPath))))
         self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(installPartitionBasename, params[0]), "Esecuzione di grub-install"))
         self.actions.append(Mkdir("/mnt/{}/boot/grub".format(installPartitionBasename)))
-        self.actions.append(GrubConfigure("/mnt/{}".format(installPartitionBasename)))
+        self.actions.append(GrubConfigure(("/mnt/{}".format(installPartitionBasename), installPartitionBasename)))
         #self.actions.append(Command("update-grub", "Esecuzione di update-grub"))
         self.progressBar["maximum"] = len(self.actions)
         self.installThread = InstallThread(self)
@@ -151,11 +151,11 @@ class GrubConfigure(Action):
     def __init__(self, params):
         super().__init__(params, "Configurazione del bootloader grub")
     def execute(self):
-        grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params), "w")
+        grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params[0]), "w")
         grubConfigFile.write("insmod ext3\n")
         grubConfigFile.write("menuentry \"TinyCore Forensics Edition\"{\n")
         grubConfigFile.write("\troot=(hd1,msdos3)\n") #TODO Parametrize hd1 and msdos3!!!
-        grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt={} home={} tce={}\n".format(self._params, self._params, self._params)) 
+        grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt={} home={} tce={}\n".format(self._params[1], self._params[1], self._params[1])) 
         grubConfigFile.write("\tinitrd /boot/core.gz\n")
         grubConfigFile.write("}")
         grubConfigFile.close()
