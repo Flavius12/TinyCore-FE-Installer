@@ -43,18 +43,32 @@ class InstallPage(ttk.Frame):
         frame12.pack(expand=True, fill="both", side="top")
         self.pack(side="top")
 
+    def recursiveListFiles(self, path):
+        fileList = []
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                fileList.append(os.path.normpath(os.path.join(root, file)))
+        return fileList
+
     def onShow(self, params):
         self.installerApp.buttonBack["state"] = "disabled"
         self.installerApp.buttonNext["state"] = "disabled"
         self.installerApp.buttonCancel["state"] = "disabled"
         print("DISK: " + params[0] + " PART: " + params[1])
+        sourceDisk = "/media/flavius12/TinyCore/" # TODO Get install disk automatically
         installPartitionBasename = os.path.basename(params[1])
         if params[2] != None:
             self.actions.append(Command("mkfs.{} {}".format(params[2], params[1]), "Formattazione di {}".format(params[1])))
         self.actions.append(Mount(installPartitionBasename))
         self.actions.append(Mount(installPartitionBasename, "Montaggio del disco di installazione")) #TODO DISK instead of installPartitionBasename
         self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "/mnt/{}/gui.py".format(installPartitionBasename))))
-        self.actions.append(GrubConfigure("/mnt/" + installPartitionBasename))               
+        # Scan files from CD
+        '''for file in self.recursiveListFiles(sourceDisk):
+            relPath = os.path.relpath(file, sourceDisk)
+            self.actions.append(Copy((file, "/mnt/{}/{}".format(installPartitionBasename, relPath))))'''
+        self.actions.append(Mkdir("/mnt/{}/boot/grub".format(installPartitionBasename)))
+        self.actions.append(GrubConfigure("/mnt/{}".format(installPartitionBasename)))
+        self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot /dev/{}").format(installPartitionBasename, params[0]), "Esecuzione di grub-install")
         self.progressBar["maximum"] = len(self.actions)
         self.installThread = InstallThread(self)
         self.installThread.start()
@@ -96,7 +110,7 @@ class Mount(Action):
 
     def execute(self):
         Mkdir("/mnt/{}".format(self._params)).execute()
-        Command("mount /dev/{} /mnt/{}".format(self._params, self._params)).execute()
+        Command("mount -o remount /dev/{} /mnt/{}".format(self._params, self._params)).execute()
 
 class Unmount(Action):
     def __init__(self, params, description=""):
@@ -127,13 +141,15 @@ class Copy(Action):
     def __init__(self, params):
         super().__init__(params, "Copia di {}".format(os.path.basename(params[0])))
     def execute(self):
+        print("COPY {} -> {}".format(self._params[0], self._params[1]))
+        os.makedirs(os.path.dirname(self._params[1]), exist_ok=True)
         shutil.copy(self._params[0], self._params[1])
 
 class GrubConfigure(Action):
     def __init__(self, params):
         super().__init__(params, "Configurazione del bootloader grub")
     def execute(self):
-        grubConfigFile = open("{}/menu.lst".format(self._params), "w")
+        grubConfigFile = open("{}/boot/grub/menu.lst".format(self._params), "w")
         grubConfigFile.write("default 0\n")
         grubConfigFile.write("timeout 10\n")
         grubConfigFile.write("title tinycore\n") #TODO Proper title

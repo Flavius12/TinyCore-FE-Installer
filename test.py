@@ -27,7 +27,6 @@ if euid != 0:
     #print(device.probeFileSystem(device.biosGeometry))
     #print(disk)
     input()
-'''
 
 device = parted.getDevice("/dev/sda")
 #disk = parted.freshDisk(device, "msdos")
@@ -72,4 +71,20 @@ for partition in partitionList:
     print(os.path.basename(partition[1].path))
     print(sizeof_fmt(partition[1].getSize(unit="b")))
     print("------")
-print()
+print()'''
+
+def rec_listdir(path, fileList=[]):
+    for root, subdirs, files in os.walk(path):
+        print(root)
+        for subdir in subdirs:
+            rec_listdir(os.path.normpath(os.path.join(root, subdir)), fileList)
+        for file in files:
+            fileList.append(os.path.normpath(os.path.join(root, file)))
+            #print(os.path.normpath(os.path.join(root, file)))
+    return fileList
+
+#print(rec_listdir("/media/flavius12/TinyCore/boot"))
+
+for root, dirs, files in os.walk("/media/flavius12/TinyCore"):
+    for file in files:
+        print(os.path.relpath(os.path.normpath(os.path.join(root, file)), "/media/flavius12/TinyCore"))
