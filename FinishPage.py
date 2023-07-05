@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+import os
 
 class FinishPage(ttk.Frame):
     def __init__(self, installerApp, parent):
@@ -30,8 +31,12 @@ class FinishPage(ttk.Frame):
             side="right")
         self.pack(side="top")
 
+    def onButtonNextClick(self):
+        #os.system("reboot") #TODO Unlock later
+        self.installerApp.quit()
+
     def onShow(self, params):
         self.installerApp.buttonBack["state"] = "disabled"
         self.installerApp.buttonNext["text"] = "Fine"
-        self.installerApp.buttonNext["command"] = lambda : self.installerApp.quit()
+        self.installerApp.buttonNext["command"] = lambda : self.onButtonNextClick()
         self.installerApp.buttonCancel["state"] = "disabled"

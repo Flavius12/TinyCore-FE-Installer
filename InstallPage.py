@@ -60,30 +60,30 @@ class InstallPage(ttk.Frame):
         self.installerApp.buttonBack["state"] = "disabled"
         self.installerApp.buttonNext["state"] = "disabled"
         self.installerApp.buttonCancel["state"] = "disabled"
-        print("DISK: " + params[0] + " PART: " + params[1])
+        print("DISK: " + params[0].device.path + " PART: " + params[1].path)
         sourceDisk = "/media/flavius12/" # TODO Get install disk automatically
-        installPartitionBasename = os.path.basename(params[1])
+        destinationDev = os.path.basename(params[1].path)
         if params[2] != None:
-            self.actions.append(Command("mkfs.{} {}".format(params[2], params[1]), "Formattazione di {}".format(params[1])))
-        self.actions.append(Mount(installPartitionBasename))
-        self.actions.append(Mount(installPartitionBasename, "Montaggio del disco di installazione")) #TODO DISK instead of installPartitionBasename
-        self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "/mnt/{}/gui.py".format(installPartitionBasename))))
-        self.actions.append(Copy(("{}/TinyCore/boot/vmlinuz".format(sourceDisk), "/mnt/{}/boot/vmlinuz".format(installPartitionBasename))))
-        self.actions.append(Copy(("{}/TinyCore/boot/core.gz".format(sourceDisk), "/mnt/{}/boot/core.gz".format(installPartitionBasename))))
+            self.actions.append(Command("mkfs.{} {} -q -F".format(params[2], params[1].path), "Formattazione di {}".format(params[1].path)))
+        self.actions.append(Mount(destinationDev, "Montaggio del disco di installazione"))
+        self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "/mnt/{}/gui.py".format(destinationDev))))
+        self.actions.append(Copy(("{}/TinyCore/boot/vmlinuz".format(sourceDisk), "/mnt/{}/boot/vmlinuz".format(destinationDev))))
+        self.actions.append(Copy(("{}/TinyCore/boot/core.gz".format(sourceDisk), "/mnt/{}/boot/core.gz".format(destinationDev))))
         # Copy extensions
         for file in self.recursiveListFiles("{}/TinyCore/cde".format(sourceDisk)):
             relPath = os.path.relpath(file, "{}/TinyCore/cde".format(sourceDisk))
-            self.actions.append(Copy((file, "/mnt/{}/tce/{}".format(installPartitionBasename, relPath))))
+            self.actions.append(Copy((file, "/mnt/{}/tce/{}".format(destinationDev, relPath))))
         # Change extensions permissions
-        for file in self.recursiveListFiles("/mnt/{}/tce/optional".format(installPartitionBasename)):
-            self.actions.append(Chmod((file, stat.S_IRUSR or stat.S_IWUSR or stat.S_IRGRP or stat.S_IWGRP or stat.S_IROTH)))
+        for file in self.recursiveListFiles("/mnt/{}/tce/optional".format(destinationDev)):
+            self.actions.append(Chmod((file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))
         # Change extensions configuration files permissions
-        self.actions.append(Chmod(("/mnt/{}/tce/copy2fs.lst".format(installPartitionBasename), stat.S_IRUSR or stat.S_IWUSR or stat.S_IRGRP or stat.S_IWGRP or stat.S_IROTH)))    
-        self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(installPartitionBasename), stat.S_IRUSR or stat.S_IWUSR or stat.S_IRGRP or stat.S_IWGRP or stat.S_IROTH)))    
-        self.actions.append(Chmod(("/mnt/{}/tce/xbase.lst".format(installPartitionBasename), stat.S_IRWXU or stat.S_IRWXG or stat.S_IRWXO)))    
-        self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(installPartitionBasename, params[0]), "Esecuzione di grub-install"))
-        self.actions.append(Mkdir("/mnt/{}/boot/grub".format(installPartitionBasename)))
-        self.actions.append(GrubConfigure(("/mnt/{}".format(installPartitionBasename), installPartitionBasename)))
+        self.actions.append(Chmod(("/mnt/{}/tce/copy2fs.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
+        self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
+        self.actions.append(Chmod(("/mnt/{}/tce/xbase.lst".format(destinationDev), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)))    
+        self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(destinationDev, params[0].device.path), "Esecuzione di grub-install"))
+        self.actions.append(Mkdir("/mnt/{}/boot/grub".format(destinationDev)))
+        self.actions.append(GrubConfigure(("/mnt/{}".format(destinationDev), destinationDev)))
+        self.actions.append(Unmount(destinationDev))
         #self.actions.append(Command("update-grub", "Esecuzione di update-grub"))
         self.progressBar["maximum"] = len(self.actions)
         self.installThread = InstallThread(self)
@@ -102,7 +102,6 @@ class InstallThread(Thread):
             self.installPage.labelProgress["text"] = item.description
             item.execute()
             self.installPage.progressBar["value"] += 1
-            #time.sleep(1) #TODO REMOVE LATER
         self.installPage.onFinishInstall()
 
 class Action:
@@ -151,7 +150,7 @@ class Rmdir(Action):
         super().__init__(params, "Rimozione della cartella {}".format(params))
     def execute(self):
         if os.path.isdir(self._params) == True:
-            os.rmdir(self._params)
+            shutil.rmtree(self._params)
 
 class Copy(Action):
     def __init__(self, params):
@@ -173,9 +172,8 @@ class GrubConfigure(Action):
         deviceUUID = getDeviceUUID("/dev/{}".format(self._params[1]))
         grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params[0]), "w")
         grubConfigFile.write("insmod ext3\n")
-        grubConfigFile.write("search --no-floppy --fs-uuid --set=root {}".format(deviceUUID))
+        grubConfigFile.write("search --no-floppy --fs-uuid --set=root {}\n".format(deviceUUID))
         grubConfigFile.write("menuentry \"TinyCore Forensics Edition\"{\n")
-        grubConfigFile.write("\troot=(hd1,msdos3)\n") #TODO Parametrize hd1 and msdos3!!!
         grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt=UUID={} home=UUID={} tce=UUID={}\n".format(deviceUUID, deviceUUID, deviceUUID)) 
         grubConfigFile.write("\tinitrd /boot/core.gz\n")
         grubConfigFile.write("}")

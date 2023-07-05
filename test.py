@@ -2,6 +2,7 @@ import parted
 import os
 import sys
 import re
+import stat
 from subprocess import Popen, PIPE
 
 def sizeof_fmt(num, suffix="B"):
@@ -17,7 +18,7 @@ if euid != 0:
     args = ['sudo', sys.executable] + sys.argv + [os.environ]
     # the next line replaces the currently-running process with the sudo
     os.execlpe('sudo', *args)
-'''
+
 for device in parted.getAllDevices():
     os.system("clear")
     success = False
@@ -29,9 +30,15 @@ for device in parted.getAllDevices():
     #print(disk)
     input()
 
-device = parted.getDevice("/dev/sda")
+device = parted.getDevice("/dev/sdb")
 #disk = parted.freshDisk(device, "msdos")
 disk = parted.newDisk(device)
+disk.deleteAllPartitions()
+freePartition = disk.getFreeSpacePartitions()[0]
+fileSystem = parted.FileSystem(type="ext3", geometry=freePartition.geometry)
+partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=freePartition.geometry)
+partition.setFlag(parted.PARTITION_BOOT)
+disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
 print(device.length * device.sectorSize)
 print(disk.maxPrimaryPartitionCount)
 partitionList = list()
@@ -48,15 +55,16 @@ if disk.getExtendedPartition():
 partitionList.sort(key=lambda item: item[1].geometry.start)
 partitionsPrimaryExtendedOnly = list(filter(lambda item : item[0] == 0 or item[0] == 1, partitionList))
 for freePartition in disk.getFreeSpacePartitions():
-    #print("Free:")
-    #print(freePartition)
-    #print(freePartition.geometry)
-    #print(sizeof_fmt(freePartition.getSize(unit="b")))
+    print("Free:")
+    print(freePartition)
+    print(freePartition.geometry)
+    print(sizeof_fmt(freePartition.getSize(unit="b")))
     if not partitionsPrimaryExtendedOnly: # No partitions found
         partitionList.append((2, freePartition))
     elif freePartition.geometry.end < partitionsPrimaryExtendedOnly[0][1].geometry.start and partitionsPrimaryExtendedOnly[0][1].geometry.start > (1024 * 1024 / device.sectorSize):
         partitionList.append((2, freePartition))
     elif freePartition.geometry.end > partitionsPrimaryExtendedOnly[-1][1].geometry.end and (device.length - 1 - partitionsPrimaryExtendedOnly[-1][1].geometry.end) >= (1024 * 1024 / device.sectorSize):
+        freePartition.geometry.end = device.getLength() - 1
         partitionList.append((2, freePartition))
 partitionList.sort(key=lambda item: item[1].geometry.start)
 for partition in partitionList:
@@ -72,10 +80,11 @@ for partition in partitionList:
     print(os.path.basename(partition[1].path))
     print(partition[1].getDeviceNodeName())
     print(sizeof_fmt(partition[1].getSize(unit="b")))
+    print("S: {} E: {}".format(partition[1].geometry.start, partition[1].geometry.end))
     print("------")
 print()
 
-
+'''
 def rec_listdir(path, fileList=[]):
     for root, subdirs, files in os.walk(path):
         print(root)
@@ -92,5 +101,3 @@ for root, dirs, files in os.walk("/media/flavius12/TinyCore/cde"):
     for file in files:
         print(os.path.relpath(os.path.normpath(os.path.join(root, file)), "/media/flavius12/TinyCore/cde"))
 '''
-response = Popen(["blkid", "-s", "UUID", "-o", "value", "/dev/sdb2"], stdout=PIPE).communicate()
-print(response[0].decode("utf-8").replace("\n", ""))

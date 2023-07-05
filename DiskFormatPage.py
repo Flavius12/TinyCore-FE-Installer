@@ -9,8 +9,6 @@ PRIMARY = 0
 EXTENDED = 1
 FREE = 2
 
-#TODO New partitions
-
 def getPartitions(disk):
     partitionList = list()
     for primaryPartition in disk.getPrimaryPartitions():
@@ -21,15 +19,22 @@ def getPartitions(disk):
     partitionsPrimaryExtendedOnly = list(filter(lambda item : item[0] == 0 or item[0] == 1, partitionList))
     for freePartition in disk.getFreeSpacePartitions():
         if not partitionsPrimaryExtendedOnly: # No partitions found
-            partitionList.append((2, freePartition))
+            partitionList.append((FREE, freePartition))
         elif freePartition.geometry.end < partitionsPrimaryExtendedOnly[0][1].geometry.start:
             if partitionsPrimaryExtendedOnly[0][1].geometry.start > (1024 * 1024 / disk.device.sectorSize):
-                partitionList.append((2, freePartition))
+                partitionList.append((FREE, freePartition))
         elif freePartition.geometry.end > partitionsPrimaryExtendedOnly[-1][1].geometry.end:
             if (disk.device.length - 1 - partitionsPrimaryExtendedOnly[-1][1].geometry.end) >= (1024 * 1024 / disk.device.sectorSize):
-                partitionList.append((2, freePartition))
+                freePartition.geometry.end = disk.device.getLength() - 1
+                partitionList.append((FREE, freePartition))
         else:
-            partitionList.append((2, freePartition))
+            isFreePartition = True
+            for primaryOrExtendedPartition in partitionsPrimaryExtendedOnly:
+                if (primaryOrExtendedPartition[1].geometry.start >= freePartition.geometry.start and primaryOrExtendedPartition[1].geometry.start <= freePartition.geometry.end) or (primaryOrExtendedPartition[1].geometry.end >= freePartition.geometry.start and primaryOrExtendedPartition[1].geometry.end <= freePartition.geometry.end):
+                      isFreePartition = False
+                      break
+            if isFreePartition:
+                partitionList.append((FREE, freePartition))
     partitionList.sort(key=lambda item: item[1].geometry.start)
     return partitionList
 
@@ -82,8 +87,26 @@ class DiskFormatPage(ttk.Frame):
 
     def onButtonNextClick(self):
         if self.autoDiskFormat.get() == True:
-            # TODO AutoFormat
-            self.installerApp.navigateToPage("installPage")
+            #TODO Unlock later
+            '''for device in parted.getAllDevices():
+                if device.readOnly == False and re.match("^([^0-9]+)$", os.path.basename(device.path)): # Exclude readonly devices and CD/DVDs
+                    pass
+                else:
+                    firstDevice = device
+                    break
+            #Load Disk
+            try:
+                disk = parted.newDisk(firstDevice)
+            except:
+                disk = parted.freshDisk(firstDevice, "msdos")
+            disk.deleteAllPartitions()
+            freePartition = disk.getFreeSpacePartitions()[0]
+            fileSystem = parted.FileSystem(type="ext3", geometry=freePartition.geometry)
+            partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=freePartition.geometry)
+            partition.setFlag(parted.PARTITION_BOOT)
+            disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
+            disk.commit()'''
+            self.installerApp.navigateToPage("installPage",  (disk, partition, "ext3"))
         else:
             self.installerApp.navigateToPage("customDiskFormatPage")
     
@@ -181,7 +204,7 @@ class CustomDiskFormatPage(ttk.Frame):
                     self.treeview1.insert(parent="", index='end', values=(partition[1].path, formatBytes(partition[1].getSize(unit="b")), "Primaria", fileSystemName), tags=i)
                 elif partition[0] == EXTENDED:
                     self.treeview1.insert(parent="", index='end', values=(partition[1].path, formatBytes(partition[1].getSize(unit="b")), "Estesa", "-"), tags=i)
-                else:
+                elif partition[0] == FREE:
                     self.treeview1.insert(parent="", index="end", values=("Spazio non allocato", formatBytes(partition[1].getSize(unit="b")), "-", "-"), tags=i)
         except:
             for item in self.treeview1.get_children():
@@ -206,8 +229,13 @@ class CustomDiskFormatPage(ttk.Frame):
             self.buttonDeletePartition["state"] = "disabled"
         
     def onButtonNewPartitionClick(self):
-        resp = NewPartitionDialog(self.installerApp.mainWindow, self.partitionList[self.treeview1.item(self.treeview1.focus())['tags'][0]][1]).response
-        print("RESPONSE " + str(resp))
+        if self.disks[self.combobox3.current()].primaryPartitionCount < self.disks[self.combobox3.current()].maxPrimaryPartitionCount:
+            response = NewPartitionDialog(self.installerApp.mainWindow, self.disks[self.combobox3.current()], self.partitionList[self.treeview1.item(self.treeview1.focus())['tags'][0]][1]).response
+            if response[0] == True:
+                self.disks[self.combobox3.current()].addPartition(partition=response[1], constraint=self.disks[self.combobox3.current()].device.optimalAlignedConstraint)
+                self.loadPartitions(self.disks[self.combobox3.current()]) #Update partitions TreeView
+        else:
+            messagebox.showerror("Limite partizioni raggiunto", "Impossibile creare una nuova partizione: è stato raggiunto il limite di partizioni definibili sul disco.")
 
     def onButtonDeletePartitionClick(self):
         if messagebox.askquestion("Cancellare la partizione?", "Vuoi cancellare la partizione selezionata?\nATTENZIONE: TUTTI I DATI IN QUESTA PARTIZIONE SARANNO CANCELLATI", icon="warning") == "yes":
@@ -219,16 +247,17 @@ class CustomDiskFormatPage(ttk.Frame):
             selectedPartition = self.partitionList[self.treeview1.item(self.treeview1.focus())['tags'][0]]
             if selectedPartition[0] == PRIMARY:
                 if messagebox.askquestion("Scrivere le modifiche sul disco?", "Proseguendo, si procederà con il partizionamento del disco {} e l'installazione del sistema sulla partizione {}. Continuare?\nATTENZIONE: TUTTI I DATI PRESENTI SUL DISCO SARANNO CANCELLATI".format(self.disks[self.combobox3.current()].device.path, selectedPartition[1].path), icon="warning") == "yes":
+                    selectedPartition[1].setFlag(parted.PARTITION_BOOT)
                     self.disks[self.combobox3.current()].commit()
-                    self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()].device.path, selectedPartition[1].path, None))
+                    self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()], selectedPartition[1], "ext3"))
             elif selectedPartition[0] == FREE: #Format the partition now
                 if messagebox.askquestion("Scrivere le modifiche sul disco?", "Proseguendo, si procederà con il partizionamento del disco {} e l'installazione del sistema sulla partizione selezionata. Continuare?\nATTENZIONE: TUTTI I DATI PRESENTI SUL DISCO SARANNO CANCELLATI".format(self.disks[self.combobox3.current()].device.path), icon="warning") == "yes":
                     fileSystem = parted.FileSystem(type="ext3", geometry=selectedPartition[1].geometry)
                     partition = parted.Partition(disk=self.disks[self.combobox3.current()], type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=selectedPartition[1].geometry)
-                    self.disks[self.combobox3.current()].addPartition(partition=partition, constraint=self.disks[self.combobox3.current()].device.optimalAlignedConstraint)
                     partition.setFlag(parted.PARTITION_BOOT)
+                    self.disks[self.combobox3.current()].addPartition(partition=partition, constraint=self.disks[self.combobox3.current()].device.optimalAlignedConstraint)
                     self.disks[self.combobox3.current()].commit()
-                    self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()].device.path, partition.path, "ext3"))
+                    self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()], partition, "ext3"))
             else:
                 messagebox.showerror("Partizione non valida", "Il sistema può essere installato solo su partizioni primarie")
         else:
@@ -245,12 +274,14 @@ class CustomDiskFormatPage(ttk.Frame):
         self.treeview1.bind("<<TreeviewSelect>>", self.onDiskTreeViewSelect)
 
 class NewPartitionDialog(tk.Toplevel):
-    def __init__(self, parent, partition):
+    def __init__(self, parent, disk, partition):
         super().__init__(parent)
         self.response = False
+        self.disk = disk
+        self.partition = partition
         self.startSector = partition.geometry.start
         self.primaryPartition = tk.BooleanVar(value=True)
-        self.partitionSize = tk.StringVar(value=partition.getSize(unit="MB"))
+        self.partitionSize = tk.DoubleVar(value=partition.getSize(unit="MB"))
         self.posX = parent.winfo_x() + (parent.winfo_width() / 2 - 345 / 2)
         self.posY = parent.winfo_y() + (parent.winfo_height() / 2 - 130 / 2)
         self.geometry("345x130+{}+{}".format(int(self.posX), int(self.posY)))
@@ -312,9 +343,14 @@ class NewPartitionDialog(tk.Toplevel):
         self.combobox1["state"] = "disabled"
 
     def onButtonCancelClick(self):
-        self.response = False
+        self.response = (False, None)
         self.destroy()
 
     def onButtonOkClick(self):
-        self.response = True
+        self.partition.geometry.end = min(self.partition.geometry.end, self.partition.geometry.start + int(self.partitionSize.get() * 1024 * 1024 / self.disk.device.sectorSize))
+        if self.primaryPartition.get() == True:
+            fileSystem = parted.FileSystem(type="ext3", geometry=self.partition.geometry)
+            self.response = (True, parted.Partition(disk=self.disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=self.partition.geometry))
+        else:
+            self.response = (True, parted.Partition(disk=self.disk, type=parted.PARTITION_EXTENDED, geometry=self.partition.geometry))
         self.destroy()
