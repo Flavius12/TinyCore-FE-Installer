@@ -2,12 +2,18 @@ from threading import Thread
 import tkinter as tk
 import tkinter.ttk as ttk
 import os
+import stat
 import shutil
+from subprocess import Popen, PIPE
 import time
 
 #TODO Copy necessary files (only forensics tools part missing)
 #TODO Desktop wallpaper install
 #TODO GRUB wallpaper install
+
+def getDeviceUUID(device):
+    response = Popen(["blkid", "-s", "UUID", "-o", "value", device], stdout=PIPE).communicate()
+    return response[0].decode("utf-8").replace("\n", "")
 
 class InstallPage(ttk.Frame):
     def __init__(self, installerApp, parent):
@@ -68,6 +74,13 @@ class InstallPage(ttk.Frame):
         for file in self.recursiveListFiles("{}/TinyCore/cde".format(sourceDisk)):
             relPath = os.path.relpath(file, "{}/TinyCore/cde".format(sourceDisk))
             self.actions.append(Copy((file, "/mnt/{}/tce/{}".format(installPartitionBasename, relPath))))
+        # Change extensions permissions
+        for file in self.recursiveListFiles("/mnt/{}/tce/optional".format(installPartitionBasename)):
+            self.actions.append(Chmod((file, stat.S_IRUSR or stat.S_IWUSR or stat.S_IRGRP or stat.S_IWGRP or stat.S_IROTH)))
+        # Change extensions configuration files permissions
+        self.actions.append(Chmod(("/mnt/{}/tce/copy2fs.lst".format(installPartitionBasename), stat.S_IRUSR or stat.S_IWUSR or stat.S_IRGRP or stat.S_IWGRP or stat.S_IROTH)))    
+        self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(installPartitionBasename), stat.S_IRUSR or stat.S_IWUSR or stat.S_IRGRP or stat.S_IWGRP or stat.S_IROTH)))    
+        self.actions.append(Chmod(("/mnt/{}/tce/xbase.lst".format(installPartitionBasename), stat.S_IRWXU or stat.S_IRWXG or stat.S_IRWXO)))    
         self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(installPartitionBasename, params[0]), "Esecuzione di grub-install"))
         self.actions.append(Mkdir("/mnt/{}/boot/grub".format(installPartitionBasename)))
         self.actions.append(GrubConfigure(("/mnt/{}".format(installPartitionBasename), installPartitionBasename)))
@@ -147,15 +160,23 @@ class Copy(Action):
         os.makedirs(os.path.dirname(self._params[1]), exist_ok=True)
         shutil.copy(self._params[0], self._params[1])
 
+class Chmod(Action):
+    def __init__(self, params):
+        super().__init__(params, "Impostazione dei permessi su {}".format(os.path.basename(params[0])))
+    def execute(self):
+        os.chmod(self._params[0], self._params[1])
+
 class GrubConfigure(Action):
     def __init__(self, params):
         super().__init__(params, "Configurazione del bootloader grub")
     def execute(self):
+        deviceUUID = getDeviceUUID("/dev/{}".format(self._params[1]))
         grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params[0]), "w")
         grubConfigFile.write("insmod ext3\n")
+        grubConfigFile.write("search --no-floppy --fs-uuid --set=root {}".format(deviceUUID))
         grubConfigFile.write("menuentry \"TinyCore Forensics Edition\"{\n")
         grubConfigFile.write("\troot=(hd1,msdos3)\n") #TODO Parametrize hd1 and msdos3!!!
-        grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt={} home={} tce={}\n".format(self._params[1], self._params[1], self._params[1])) 
+        grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt=UUID={} home=UUID={} tce=UUID={}\n".format(deviceUUID, deviceUUID, deviceUUID)) 
         grubConfigFile.write("\tinitrd /boot/core.gz\n")
         grubConfigFile.write("}")
         grubConfigFile.close()

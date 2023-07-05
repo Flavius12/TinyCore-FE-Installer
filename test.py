@@ -2,6 +2,7 @@ import parted
 import os
 import sys
 import re
+from subprocess import Popen, PIPE
 
 def sizeof_fmt(num, suffix="B"):
     for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
@@ -16,8 +17,8 @@ if euid != 0:
     args = ['sudo', sys.executable] + sys.argv + [os.environ]
     # the next line replaces the currently-running process with the sudo
     os.execlpe('sudo', *args)
-
-'''for device in parted.getAllDevices():
+'''
+for device in parted.getAllDevices():
     os.system("clear")
     success = False
     if re.match("^([^0-9]+)$", os.path.basename(device.path)):
@@ -69,9 +70,11 @@ for partition in partitionList:
     #print(partition[1])
     print(partition[1].type)
     print(os.path.basename(partition[1].path))
+    print(partition[1].getDeviceNodeName())
     print(sizeof_fmt(partition[1].getSize(unit="b")))
     print("------")
-print()'''
+print()
+
 
 def rec_listdir(path, fileList=[]):
     for root, subdirs, files in os.walk(path):
@@ -88,3 +91,6 @@ def rec_listdir(path, fileList=[]):
 for root, dirs, files in os.walk("/media/flavius12/TinyCore/cde"):
     for file in files:
         print(os.path.relpath(os.path.normpath(os.path.join(root, file)), "/media/flavius12/TinyCore/cde"))
+'''
+response = Popen(["blkid", "-s", "UUID", "-o", "value", "/dev/sdb2"], stdout=PIPE).communicate()
+print(response[0].decode("utf-8").replace("\n", ""))
