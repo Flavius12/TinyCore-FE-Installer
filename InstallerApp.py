@@ -53,23 +53,10 @@ class InstallerApp:
             "diskFormatPage": DiskFormatPage(self, self.notebook),
             "customDiskFormatPage": CustomDiskFormatPage(self, self.notebook),
             "installPage": InstallPage(self, self.notebook),
-            "setUsersPage": SetUsersPage(self, self.notebook),
             "finishPage": FinishPage(self, self.notebook),
         }
         for key, value in self.pages.items():
             self.notebook.add(value, text=key)
-        """ self.welcomePage = 
-        self.notebook.add(self.welcomePage, text='Welcome Page')
-        self.diskFormatPage = 
-        self.notebook.add(self.diskFormatPage, text='Disk Format Page')
-        self.customDiskFormatPage = 
-        self.notebook.add(self.customDiskFormatPage, text='Custom Disk Format Page')
-        self.installPage = 
-        self.notebook.add(self.installPage, text='Install Page')
-        self.setUsersPage = 
-        self.notebook.add(self.setUsersPage, text='Set Users Page')
-        self.finishPage = 
-        self.notebook.add(self.finishPage, text='Finish Page') """
         self.notebook.pack(side="top")
 
     def navigateToPage(self, page, params=None):

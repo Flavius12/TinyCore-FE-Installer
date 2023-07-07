@@ -88,25 +88,30 @@ class DiskFormatPage(ttk.Frame):
     def onButtonNextClick(self):
         if self.autoDiskFormat.get() == True:
             #TODO Unlock later
-            '''for device in parted.getAllDevices():
+            '''firstDevice = None
+            for device in parted.getAllDevices():
                 if device.readOnly == False and re.match("^([^0-9]+)$", os.path.basename(device.path)): # Exclude readonly devices and CD/DVDs
                     pass
                 else:
                     firstDevice = device
                     break
-            #Load Disk
-            try:
-                disk = parted.newDisk(firstDevice)
-            except:
-                disk = parted.freshDisk(firstDevice, "msdos")
-            disk.deleteAllPartitions()
-            freePartition = disk.getFreeSpacePartitions()[0]
-            fileSystem = parted.FileSystem(type="ext3", geometry=freePartition.geometry)
-            partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=freePartition.geometry)
-            partition.setFlag(parted.PARTITION_BOOT)
-            disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
-            disk.commit()'''
-            self.installerApp.navigateToPage("installPage",  (disk, partition, "ext3"))
+            if firstDevice != None:
+                #Load Disk
+                try:
+                    disk = parted.newDisk(firstDevice)
+                except:
+                    disk = parted.freshDisk(firstDevice, "msdos")
+                disk.deleteAllPartitions()
+                freePartition = disk.getFreeSpacePartitions()[0]
+                fileSystem = parted.FileSystem(type="ext3", geometry=freePartition.geometry)
+                partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=freePartition.geometry)
+                partition.setFlag(parted.PARTITION_BOOT)
+                disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
+                disk.commit()
+                self.installerApp.navigateToPage("installPage",  (disk, partition, "ext3"))
+            else:
+                messagebox.showerror("Nessun disco trovato", "Sul dispostivo non è presente alcun disco su cui è possibile installare il sistema")
+                '''
         else:
             self.installerApp.navigateToPage("customDiskFormatPage")
     

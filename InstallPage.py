@@ -90,7 +90,7 @@ class InstallPage(ttk.Frame):
         self.installThread.start()
     
     def onFinishInstall(self):
-        self.installerApp.navigateToPage("setUsersPage")
+        self.installerApp.navigateToPage("finishPage")
 
 class InstallThread(Thread):
     def __init__(self, installPage):
