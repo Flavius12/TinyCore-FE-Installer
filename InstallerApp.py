@@ -6,7 +6,6 @@ from WelcomePage import WelcomePage
 from DiskFormatPage import DiskFormatPage
 from DiskFormatPage import CustomDiskFormatPage
 from InstallPage import InstallPage
-from SetUsersPage import SetUsersPage
 from FinishPage import FinishPage
 
 class InstallerApp:
