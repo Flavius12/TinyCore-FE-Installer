@@ -8,8 +8,8 @@ from subprocess import Popen, PIPE
 import time
 
 #TODO Copy necessary files (only forensics tools part missing)
-#TODO Desktop wallpaper install
-#TODO GRUB wallpaper install
+#TODO Desktop wallpaper install (MUST TEST)
+#TODO GRUB wallpaper install (MUST TEST)
 
 def getDeviceUUID(device):
     response = Popen(["blkid", "-s", "UUID", "-o", "value", device], stdout=PIPE).communicate()
@@ -80,8 +80,11 @@ class InstallPage(ttk.Frame):
         self.actions.append(Chmod(("/mnt/{}/tce/copy2fs.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
         self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
         self.actions.append(Chmod(("/mnt/{}/tce/xbase.lst".format(destinationDev), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)))    
+        self.actions.append(Copy(("{}/TinyCore/boot/grub/TCF.png".format(sourceDisk), "/mnt/{}/opt/backgrounds/TCF.png".format(destinationDev))))
         self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(destinationDev, params[0].device.path), "Esecuzione di grub-install"))
         self.actions.append(Mkdir("/mnt/{}/boot/grub".format(destinationDev)))
+        self.actions.append(Copy(("{}/TinyCore/boot/grub/TCF.png".format(sourceDisk), "/mnt/{}/boot/grub/TCF.png".format(destinationDev))))
+        self.actions.append(Copy(("{}/TinyCore/boot/grub/fonts/ascii.pf2".format(sourceDisk), "/mnt/{}/boot/grub/fonts/ascii.pf2".format(destinationDev))))
         self.actions.append(GrubConfigure(("/mnt/{}".format(destinationDev), destinationDev)))
         self.actions.append(Unmount(destinationDev))
         #self.actions.append(Command("update-grub", "Esecuzione di update-grub"))
@@ -172,7 +175,20 @@ class GrubConfigure(Action):
         deviceUUID = getDeviceUUID("/dev/{}".format(self._params[1]))
         grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params[0]), "w")
         grubConfigFile.write("insmod ext3\n")
+        grubConfigFile.write("insmod all_video\n")
+        grubConfigFile.write("insmod efi_gop\n")
+        grubConfigFile.write("insmod efi_uga\n")
+        grubConfigFile.write("insmod ieee1275_fb\n")
+        grubConfigFile.write("insmod vbe\n")
+        grubConfigFile.write("insmod vga\n")
+        grubConfigFile.write("insmod video_bochs\n")
+        grubConfigFile.write("insmod video_cirrus\n")
+        grubConfigFile.write("insmod gfxterm\n")
+        grubConfigFile.write("insmod png\n")
+        grubConfigFile.write("terminal_output gfxterm\n")
         grubConfigFile.write("search --no-floppy --fs-uuid --set=root {}\n".format(deviceUUID))
+        grubConfigFile.write("loadfont /boot/grub/fonts/unicode.pf2\n")
+        grubConfigFile.write("background_image /boot/grub/TCF.png\n")
         grubConfigFile.write("menuentry \"TinyCore Forensics Edition\"{\n")
         grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt=UUID={} home=UUID={} tce=UUID={}\n".format(deviceUUID, deviceUUID, deviceUUID)) 
         grubConfigFile.write("\tinitrd /boot/core.gz\n")
