@@ -274,7 +274,8 @@ class CustomDiskFormatPage(ttk.Frame):
         self.buttonNewPartition["command"] = lambda : self.onButtonNewPartitionClick()
         self.buttonDeletePartition["command"] = lambda : self.onButtonDeletePartitionClick()
         self.loadDisksInfo()
-        self.loadPartitions(self.disks[0])
+        if len(self.disks) > 0:
+            self.loadPartitions(self.disks[0])
         self.combobox3.bind('<<ComboboxSelected>>', self.onDiskComboBoxChange)
         self.treeview1.bind("<<TreeviewSelect>>", self.onDiskTreeViewSelect)
 

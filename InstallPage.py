@@ -61,30 +61,26 @@ class InstallPage(ttk.Frame):
         self.installerApp.buttonNext["state"] = "disabled"
         self.installerApp.buttonCancel["state"] = "disabled"
         print("DISK: " + params[0].device.path + " PART: " + params[1].path)
-        sourceDisk = "/media/flavius12/" # TODO Get install disk automatically
         destinationDev = os.path.basename(params[1].path)
         if params[2] != None:
             self.actions.append(Command("mkfs.{} {} -q -F".format(params[2], params[1].path), "Formattazione di {}".format(params[1].path)))
         self.actions.append(Mount(destinationDev, "Montaggio del disco di installazione"))
-        self.actions.append(Copy(("/home/flavius12/Desktop/gui.py", "/mnt/{}/gui.py".format(destinationDev))))
-        self.actions.append(Copy(("{}/TinyCore/boot/vmlinuz".format(sourceDisk), "/mnt/{}/boot/vmlinuz".format(destinationDev))))
-        self.actions.append(Copy(("{}/TinyCore/boot/core.gz".format(sourceDisk), "/mnt/{}/boot/core.gz".format(destinationDev))))
+        self.actions.append(Copy(("/tmp/setup/vmlinuz", "/mnt/{}/boot/vmlinuz".format(destinationDev))))
+        self.actions.append(Copy(("/tmp/setup/core.gz", "/mnt/{}/boot/core.gz".format(destinationDev))))
         # Copy extensions
-        for file in self.recursiveListFiles("{}/TinyCore/cde".format(sourceDisk)):
-            relPath = os.path.relpath(file, "{}/TinyCore/cde".format(sourceDisk))
+        for file in self.recursiveListFiles("/tmp/tce"):
+            relPath = os.path.relpath(file, "/tmp/tce")
             self.actions.append(Copy((file, "/mnt/{}/tce/{}".format(destinationDev, relPath))))
         # Change extensions permissions
         for file in self.recursiveListFiles("/mnt/{}/tce/optional".format(destinationDev)):
             self.actions.append(Chmod((file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))
-        # Change extensions configuration files permissions
-        self.actions.append(Chmod(("/mnt/{}/tce/copy2fs.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
+        # Change extensions configuration files permissions 
         self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
-        self.actions.append(Chmod(("/mnt/{}/tce/xbase.lst".format(destinationDev), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)))    
-        self.actions.append(Copy(("{}/TinyCore/boot/grub/TCF.png".format(sourceDisk), "/mnt/{}/opt/backgrounds/TCF.png".format(destinationDev))))
+        self.actions.append(Copy(("/opt/backgrounds/TCF.png", "/mnt/{}/opt/backgrounds/TCF.png".format(destinationDev))))
         self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(destinationDev, params[0].device.path), "Esecuzione di grub-install"))
         self.actions.append(Mkdir("/mnt/{}/boot/grub".format(destinationDev)))
-        self.actions.append(Copy(("{}/TinyCore/boot/grub/TCF.png".format(sourceDisk), "/mnt/{}/boot/grub/TCF.png".format(destinationDev))))
-        self.actions.append(Copy(("{}/TinyCore/boot/grub/fonts/ascii.pf2".format(sourceDisk), "/mnt/{}/boot/grub/fonts/ascii.pf2".format(destinationDev))))
+        self.actions.append(Copy(("/opt/backgrounds/TCF.png", "/mnt/{}/boot/grub/TCF.png".format(destinationDev))))
+        self.actions.append(Copy(("/tmp/setup/ascii.pf2", "/mnt/{}/boot/grub/fonts/ascii.pf2".format(destinationDev))))
         self.actions.append(GrubConfigure(("/mnt/{}".format(destinationDev), destinationDev)))
         self.actions.append(Unmount(destinationDev))
         #self.actions.append(Command("update-grub", "Esecuzione di update-grub"))
