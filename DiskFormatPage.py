@@ -9,6 +9,9 @@ PRIMARY = 0
 EXTENDED = 1
 FREE = 2
 
+#FIXME leave 2048 sectors before first partition (to prevent bootloader installing failure)
+#FIXME unmount device before formatting (prevents can't inform kernel of partition changes)
+
 def getPartitions(disk):
     partitionList = list()
     for primaryPartition in disk.getPrimaryPartitions():
@@ -193,7 +196,8 @@ class CustomDiskFormatPage(ttk.Frame):
                     self.disks.append(parted.freshDisk(device, "msdos"))
                 deviceList.append(device.model + " - " + formatBytes(device.length * device.sectorSize) + " (" + device.path + ")")
         self.combobox3["values"] = deviceList
-        self.combobox3.current(0)
+        if len(deviceList) > 0:
+            self.combobox3.current(0)
 
     def loadPartitions(self, disk):
         for item in self.treeview1.get_children():

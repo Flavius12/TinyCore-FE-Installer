@@ -68,8 +68,8 @@ class InstallPage(ttk.Frame):
         self.actions.append(Copy(("/tmp/setup/vmlinuz", "/mnt/{}/boot/vmlinuz".format(destinationDev)))) # Must be the PURE TinyCore vmlinuz file, as extracted from the original ISO
         self.actions.append(Copy(("/tmp/setup/core.gz", "/mnt/{}/boot/core.gz".format(destinationDev)))) # Must be the PURE TinyCore core.gz file, as extracted from the original ISO
         # Copy extensions
-        for file in self.recursiveListFiles("/tmp/tce"):
-            relPath = os.path.relpath(file, "/tmp/tce")
+        for file in self.recursiveListFiles("/tmp/builtin"):
+            relPath = os.path.relpath(file, "/tmp/builtin")
             self.actions.append(Copy((file, "/mnt/{}/tce/{}".format(destinationDev, relPath))))
         # Change extensions permissions
         for file in self.recursiveListFiles("/mnt/{}/tce/optional".format(destinationDev)):
