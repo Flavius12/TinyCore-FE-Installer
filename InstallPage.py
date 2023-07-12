@@ -81,6 +81,10 @@ class InstallPage(ttk.Frame):
         self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
         self.actions.append(Copy(("/opt/backgrounds/TCF.png", "/mnt/{}/opt/backgrounds/TCF.png".format(destinationDev))))
         self.actions.append(Copy(("/home/tc/.setbackground", "/mnt/{}/home/tc/.setbackground".format(destinationDev))))
+        # Copy volatility3
+        for file in self.recursiveListFiles("/home/tc/volatility3-master"):
+            relPath = os.path.relpath(file, "/home/tc/volatility3-master")
+            self.actions.append(Copy((file, "/mnt/{}/home/tc/volatility3-master/{}".format(destinationDev, relPath))))
         self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(destinationDev, params[0].device.path), "Esecuzione di grub-install"))
         self.actions.append(Mkdir("/mnt/{}/boot/grub".format(destinationDev)))
         self.actions.append(Copy(("/opt/backgrounds/TCF.png", "/mnt/{}/boot/grub/TCF.png".format(destinationDev))))
@@ -174,6 +178,8 @@ class GrubConfigure(Action):
     def execute(self):
         deviceUUID = getDeviceUUID("/dev/{}".format(self._params[1]))
         grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params[0]), "w")
+        grubConfigFile.write("set timeout=10\n")
+        grubConfigFile.write("set timeout_style=menu\n")
         grubConfigFile.write("insmod ext3\n")
         grubConfigFile.write("insmod all_video\n")
         grubConfigFile.write("insmod efi_gop\n")
