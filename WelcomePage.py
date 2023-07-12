@@ -7,7 +7,7 @@ class WelcomePage(ttk.Frame):
     def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
         self.installerApp = installerApp
-        bitmap = Image.open("/home/flavius12/Desktop/TinyCore-FE-Installer/wizard.png")
+        bitmap = Image.open("res/wizard.png")
         bitmapTk = ImageTk.PhotoImage(bitmap)
         pictureBox1 = tk.Label(self, image=bitmapTk)
         pictureBox1.configure(width=164, height=314)

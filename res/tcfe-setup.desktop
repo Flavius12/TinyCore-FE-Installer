@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=TinyCore Forensic Edition Installer
+Exec=sudo python3
+Type=Application
+X-FullPathIcon=/usr/local/share/pixmaps/tcfe-setup.png
+Icon=tcfe-setup
+OnlyShowIn=Old;
+Categories=System;

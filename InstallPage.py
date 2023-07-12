@@ -23,7 +23,7 @@ class InstallPage(ttk.Frame):
         frame10.configure(height=50, width=200)
         frame11 = tk.Frame(frame10, background="white")
         frame11.configure(height=200, width=200)
-        bitmap = Image.open("/home/flavius12/Desktop/TinyCore-FE-Installer/header.png")
+        bitmap = Image.open("res/header.png")
         bitmapTk = ImageTk.PhotoImage(bitmap)
         pictureBox4 = tk.Label(frame11, image=bitmapTk)
         pictureBox4.configure(width=112, height=48)
