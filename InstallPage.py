@@ -32,7 +32,7 @@ class InstallPage(ttk.Frame):
         pictureBox4.pack(expand=False, fill="y", side="left")
         label7 = ttk.Label(frame11, background="white")
         label7.configure(font="{Arial} 12 {bold}", text='Installazione')
-        label7.pack(anchor="w", padx=20, pady=(5, 0), side="top")
+        label7.pack(anchor="w", padx=20, pady=(7, 0), side="top")
         label8 = ttk.Label(frame11, background="white")
         label8.configure(text='Installazione in corso...')
         label8.pack(anchor="w", padx=20, pady=(0, 5), side="top")

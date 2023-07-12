@@ -69,7 +69,7 @@ class DiskFormatPage(ttk.Frame):
         label12.configure(
             font="{Arial} 12 {bold}",
             text='Formattazione dischi')
-        label12.pack(anchor="w", padx=20, pady=(5, 0), side="top")
+        label12.pack(anchor="w", padx=20, pady=(7, 0), side="top")
         label13 = ttk.Label(frame18, background="white")
         label13.configure(text='Formatta i dischi rigidi')
         label13.pack(anchor="w", padx=20, pady=(0, 5), side="top")
@@ -147,7 +147,7 @@ class CustomDiskFormatPage(ttk.Frame):
         pictureBox3.pack(expand=False, fill="y", side="left")
         label3 = ttk.Label(frame7, background="white")
         label3.configure(font="{Arial} 12 {bold}", text='Formattazione dischi')
-        label3.pack(anchor="w", padx=20, pady=(5, 0), side="top")
+        label3.pack(anchor="w", padx=20, pady=(7, 0), side="top")
         label4 = ttk.Label(frame7, background="white")
         label4.configure(text='Formatta i dischi rigidi')
         label4.pack(anchor="w", padx=20, pady=(0, 5), side="top")
