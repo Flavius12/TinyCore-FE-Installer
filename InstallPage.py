@@ -1,6 +1,7 @@
 from threading import Thread
 import tkinter as tk
 import tkinter.ttk as ttk
+from PIL import ImageTk, Image
 import os
 import stat
 import shutil
@@ -8,8 +9,6 @@ from subprocess import Popen, PIPE
 import time
 
 #TODO Copy necessary files (only forensics tools part missing)
-#TODO Desktop wallpaper install (MUST TEST)
-#TODO GRUB wallpaper install (MUST TEST)
 
 def getDeviceUUID(device):
     response = Popen(["blkid", "-s", "UUID", "-o", "value", device], stdout=PIPE).communicate()
@@ -22,17 +21,21 @@ class InstallPage(ttk.Frame):
         self.actions = []
         frame10 = ttk.Frame(self)
         frame10.configure(height=50, width=200)
-        frame11 = ttk.Frame(frame10)
+        frame11 = tk.Frame(frame10, background="white")
         frame11.configure(height=200, width=200)
-        canvas4 = tk.Canvas(frame11)
-        canvas4.configure(height=50, width=100)
-        canvas4.pack(expand=False, fill="y", side="left")
-        label7 = ttk.Label(frame11)
-        label7.configure(font="{Arial} 14 {bold}", text='Installazione')
-        label7.pack(anchor="w", padx=20, pady=5, side="top")
-        label8 = ttk.Label(frame11)
+        bitmap = Image.open("/home/flavius12/Desktop/TinyCore-FE-Installer/header.png")
+        bitmapTk = ImageTk.PhotoImage(bitmap)
+        pictureBox4 = tk.Label(frame11, image=bitmapTk)
+        pictureBox4.configure(width=112, height=48)
+        pictureBox4.image = bitmapTk
+        pictureBox4.pack(anchor="n", expand=False, fill="y", side="left")
+        pictureBox4.pack(expand=False, fill="y", side="left")
+        label7 = ttk.Label(frame11, background="white")
+        label7.configure(font="{Arial} 12 {bold}", text='Installazione')
+        label7.pack(anchor="w", padx=20, pady=(5, 0), side="top")
+        label8 = ttk.Label(frame11, background="white")
         label8.configure(text='Installazione in corso...')
-        label8.pack(anchor="w", padx=20, side="top")
+        label8.pack(anchor="w", padx=20, pady=(0, 5), side="top")
         frame11.pack(expand=True, fill="both", side="top")
         separator5 = ttk.Separator(frame10)
         separator5.configure(orient="horizontal")

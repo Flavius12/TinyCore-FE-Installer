@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
+from PIL import ImageTk, Image
 import parted
 import os
 import re
@@ -55,19 +56,23 @@ class DiskFormatPage(ttk.Frame):
         self.autoDiskFormat = tk.BooleanVar(value=True)
         frame17 = ttk.Frame(self)
         frame17.configure(height=50, width=200)
-        frame18 = ttk.Frame(frame17)
+        frame18 = tk.Frame(frame17, background="white")
         frame18.configure(height=200, width=200)
-        canvas5 = tk.Canvas(frame18)
-        canvas5.configure(height=50, width=100)
-        canvas5.pack(expand=False, fill="y", side="left")
-        label12 = ttk.Label(frame18)
+        bitmap = Image.open("/home/flavius12/Desktop/TinyCore-FE-Installer/header.png")
+        bitmapTk = ImageTk.PhotoImage(bitmap)
+        pictureBox5 = tk.Label(frame18, image=bitmapTk)
+        pictureBox5.configure(width=112, height=48)
+        pictureBox5.image = bitmapTk
+        pictureBox5.pack(anchor="n", expand=False, fill="y", side="left")
+        pictureBox5.pack(expand=False, fill="y", side="left")
+        label12 = ttk.Label(frame18, background="white")
         label12.configure(
-            font="{Arial} 14 {bold}",
+            font="{Arial} 12 {bold}",
             text='Formattazione dischi')
-        label12.pack(anchor="w", padx=20, pady=5, side="top")
-        label13 = ttk.Label(frame18)
+        label12.pack(anchor="w", padx=20, pady=(5, 0), side="top")
+        label13 = ttk.Label(frame18, background="white")
         label13.configure(text='Formatta i dischi rigidi')
-        label13.pack(anchor="w", padx=20, side="top")
+        label13.pack(anchor="w", padx=20, pady=(0, 5), side="top")
         frame18.pack(expand=True, fill="both", side="top")
         separator1 = ttk.Separator(frame17)
         separator1.configure(orient="horizontal")
@@ -106,8 +111,10 @@ class DiskFormatPage(ttk.Frame):
                     disk = parted.freshDisk(firstDevice, "msdos")
                 disk.deleteAllPartitions()
                 freePartition = disk.getFreeSpacePartitions()[0]
-                fileSystem = parted.FileSystem(type="ext3", geometry=freePartition.geometry)
-                partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=freePartition.geometry)
+                geometry = freePartition.geometry;
+                geometry.start = max(2048, geometry.start) # Reserve first 2048 sectors for bootloader
+                fileSystem = parted.FileSystem(type="ext3", geometry=geometry)
+                partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=geometry)
                 partition.setFlag(parted.PARTITION_BOOT)
                 disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
                 disk.commit()
@@ -129,17 +136,21 @@ class CustomDiskFormatPage(ttk.Frame):
         self.installerApp = installerApp
         frame5 = ttk.Frame(self)
         frame5.configure(height=50, width=200)
-        frame7 = ttk.Frame(frame5)
+        frame7 = tk.Frame(frame5, background="white")
         frame7.configure(height=200, width=200)
-        canvas3 = tk.Canvas(frame7)
-        canvas3.configure(height=50, width=100)
-        canvas3.pack(expand=False, fill="y", side="left")
-        label3 = ttk.Label(frame7)
-        label3.configure(font="{Arial} 14 {bold}", text='Formattazione dischi')
-        label3.pack(anchor="w", padx=20, pady=5, side="top")
-        label4 = ttk.Label(frame7)
+        bitmap = Image.open("/home/flavius12/Desktop/TinyCore-FE-Installer/header.png")
+        bitmapTk = ImageTk.PhotoImage(bitmap)
+        pictureBox3 = tk.Label(frame7, image=bitmapTk)
+        pictureBox3.configure(width=112, height=48)
+        pictureBox3.image = bitmapTk
+        pictureBox3.pack(anchor="n", expand=False, fill="y", side="left")
+        pictureBox3.pack(expand=False, fill="y", side="left")
+        label3 = ttk.Label(frame7, background="white")
+        label3.configure(font="{Arial} 12 {bold}", text='Formattazione dischi')
+        label3.pack(anchor="w", padx=20, pady=(5, 0), side="top")
+        label4 = ttk.Label(frame7, background="white")
         label4.configure(text='Formatta i dischi rigidi')
-        label4.pack(anchor="w", padx=20, side="top")
+        label4.pack(anchor="w", padx=20, pady=(0, 5), side="top")
         frame7.pack(expand=True, fill="both", side="top")
         separator3 = ttk.Separator(frame5)
         separator3.configure(orient="horizontal")
@@ -149,7 +160,7 @@ class CustomDiskFormatPage(ttk.Frame):
         frame6.configure(height=200, width=200)
         label5 = ttk.Label(frame6)
         label5.configure(
-            text='Seleziona la partizione su cui installare TinyCore Forensics Edition:')
+            text='Seleziona la partizione su cui installare il sistema:')
         label5.pack(expand=False, fill="x", padx=50, pady=10, side="top")
         frame25 = ttk.Frame(frame6)
         frame25.configure(height=200, width=200)
@@ -160,13 +171,13 @@ class CustomDiskFormatPage(ttk.Frame):
         self.combobox3.pack(expand=True, fill="x", side="left")
         frame25.pack(fill="x", padx=50, pady=(0, 10), side="top")
         self.treeview1 = ttk.Treeview(frame6, columns=("C1", "C2", "C3", "C4"), show="headings", selectmode="browse")
-        self.treeview1.column("#1")
+        self.treeview1.column("#1", width=130)
         self.treeview1.heading("#1", text="Nome", anchor=tk.W)
-        self.treeview1.column("#2")
+        self.treeview1.column("#2", width=100)
         self.treeview1.heading("#2", text="Dimensione", anchor=tk.W)
-        self.treeview1.column("#3")
+        self.treeview1.column("#3", width=70)
         self.treeview1.heading("#3", text="Tipo", anchor=tk.W)
-        self.treeview1.column("#4")
+        self.treeview1.column("#4", width=80)
         self.treeview1.heading("#4", text="Filesystem", anchor=tk.W)
         self.treeview1.pack(expand=False, fill="x", padx=50, side="top")
         frame15 = ttk.Frame(frame6)

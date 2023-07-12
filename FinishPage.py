@@ -1,14 +1,18 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from PIL import ImageTk, Image
 import os
 
 class FinishPage(ttk.Frame):
     def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
         self.installerApp = installerApp
-        canvas2 = tk.Canvas(self)
-        canvas2.configure(width=240)
-        canvas2.pack(anchor="n", expand=False, fill="y", side="left")
+        bitmap = Image.open("/home/flavius12/Desktop/TinyCore-FE-Installer/wizard.png")
+        bitmapTk = ImageTk.PhotoImage(bitmap)
+        pictureBox2 = tk.Label(self, image=bitmapTk)
+        pictureBox2.configure(width=164, height=314)
+        pictureBox2.image = bitmapTk
+        pictureBox2.pack(anchor="n", expand=False, fill="y", side="left")
         frame14 = ttk.Frame(self)
         frame14.configure(height=200, width=200)
         label10 = ttk.Label(frame14)
@@ -19,7 +23,7 @@ class FinishPage(ttk.Frame):
         label10.pack(anchor="w", side="top")
         label11 = ttk.Label(frame14)
         label11.configure(
-            text="L'installazione di TinyCore Forensics Edition è stata completata. E' ora possibile riavviare il computer.",
+            text="L'installazione di TinyCore Forensic Edition è stata completata. E' ora possibile rimuovere il disco di installazione. Premendo Fine, il computer verrà riavviato automaticamente.",
             wraplength=400)
         label11.pack(anchor="w", pady=15, side="top")
         frame14.pack(
@@ -36,7 +40,7 @@ class FinishPage(ttk.Frame):
         self.installerApp.quit()
 
     def onShow(self, params):
-        self.installerApp.buttonBack["state"] = "disabled"
+        self.installerApp.buttonBack["state"] = "enabled"
         self.installerApp.buttonNext["text"] = "Fine"
         self.installerApp.buttonNext["command"] = lambda : self.onButtonNextClick()
         self.installerApp.buttonCancel["state"] = "disabled"

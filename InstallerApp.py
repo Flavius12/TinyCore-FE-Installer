@@ -12,26 +12,27 @@ class InstallerApp:
     def __init__(self):
         # build ui
         self.mainWindow = tk.Tk()
-        self.mainWindow.configure(height=480, width=640)
-        self.mainWindow.title("Installer")
+        winWidth=500
+        winHeight=360
+        self.mainWindow.configure(width=winWidth, height=winHeight)
+        self.mainWindow.eval("tk::PlaceWindow . center")
+        self.mainWindow.title("TinyCore Forensic Edition 3.0 Installer")
         # Configure Styles
         style = ttk.Style()
         style.layout('Tabless.TNotebook.Tab', []) # turn off tabs
         style.configure('Tabless.TNotebook', borderwidth=0) # Flat style
         self.initTabs()
         frame8 = ttk.Frame(self.mainWindow)
-        frame8.configure(height=200, width=200)
         label6 = ttk.Label(frame8)
         label6.configure(
             state="disabled",
-            text='TinyCore Forensics Edition 1.0 Installer')
+            text='TinyCore Forensic Edition 3.0 Installer')
         label6.pack(padx=5, side="left")
         separator4 = ttk.Separator(frame8)
         separator4.configure(orient="horizontal")
         separator4.pack(expand=True, fill="x", padx=5, side="top")
         frame8.pack(expand=True, fill="both", padx=10, pady=5, side="top")
         frame3 = ttk.Frame(self.mainWindow)
-        frame3.configure(height=200, width=200)
         self.buttonCancel = ttk.Button(frame3)
         self.buttonCancel.configure(text='Annulla', command=lambda : self.askQuit())
         self.buttonCancel.pack(padx=10, side="right")
@@ -46,7 +47,7 @@ class InstallerApp:
 
     def initTabs(self):
         self.notebook = ttk.Notebook(self.mainWindow, style="Tabless.TNotebook")
-        self.notebook.configure(height=480, width=640)
+        self.notebook.configure(width=500, height=314)
         self.pages = {
             "welcomePage": WelcomePage(self, self.notebook),
             "diskFormatPage": DiskFormatPage(self, self.notebook),
@@ -73,7 +74,7 @@ class InstallerApp:
         self.mainWindow.quit()
 
     def askQuit(self):
-        if messagebox.askquestion("Uscire dall'installazione?", "Vuoi uscire dall'installer di TinyCore Forensics Edition?", icon="warning") == "yes":
+        if messagebox.askquestion("Uscire dall'installazione?", "Vuoi uscire dall'installer di TinyCore Forensic Edition?", icon="warning") == "yes":
             self.quit()
 
 if __name__ == "__main__":
