@@ -17,14 +17,14 @@ class FinishPage(ttk.Frame):
         frame14.configure(height=200, width=200)
         label10 = ttk.Label(frame14)
         label10.configure(
-            font="{Arial} 24 {}",
+            font="{Arial} 16 {}",
             text='Installazione completata',
-            wraplength=350)
+            wraplength=300)
         label10.pack(anchor="w", side="top")
         label11 = ttk.Label(frame14)
         label11.configure(
-            text="L'installazione di TinyCore Forensic Edition è stata completata. E' ora possibile rimuovere il disco di installazione. Premendo Fine, il computer verrà riavviato automaticamente.",
-            wraplength=400)
+            text="L'installazione di TinyCore Forensic Edition è stata completata.\n\nE' ora possibile rimuovere il disco di installazione. Premendo Fine, il computer verrà riavviato automaticamente.",
+            wraplength=300)
         label11.pack(anchor="w", pady=15, side="top")
         frame14.pack(
             anchor="n",
@@ -36,11 +36,12 @@ class FinishPage(ttk.Frame):
         self.pack(side="top")
 
     def onButtonNextClick(self):
-        #os.system("reboot") #TODO Unlock later
+        os.system("reboot")
         self.installerApp.quit()
 
     def onShow(self, params):
-        self.installerApp.buttonBack["state"] = "enabled"
+        self.installerApp.buttonBack["state"] = "disabled"
         self.installerApp.buttonNext["text"] = "Fine"
+        self.installerApp.buttonNext["state"] = "enabled"
         self.installerApp.buttonNext["command"] = lambda : self.onButtonNextClick()
         self.installerApp.buttonCancel["state"] = "disabled"
