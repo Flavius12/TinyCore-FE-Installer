@@ -12,11 +12,14 @@ class InstallerApp:
     def __init__(self):
         # build ui
         self.mainWindow = tk.Tk()
+        self.quitRequestProcessed = False
         winWidth=500
         winHeight=360
         self.mainWindow.configure(width=winWidth, height=winHeight)
         self.mainWindow.eval("tk::PlaceWindow . center")
         self.mainWindow.title("TinyCore Forensic Edition 3.0 Installer")
+        self.mainWindow.resizable(False, False)
+        self.mainWindow.bind("<Destroy>", lambda args : self.onQuit())
         # Configure Styles
         style = ttk.Style()
         style.layout('Tabless.TNotebook.Tab', []) # turn off tabs
@@ -71,11 +74,17 @@ class InstallerApp:
         self.mainWindow.mainloop()
     
     def quit(self):
+        self.onQuit()
         self.mainWindow.quit()
 
     def askQuit(self):
         if messagebox.askquestion("Uscire dall'installazione?", "Vuoi uscire dall'installer di TinyCore Forensic Edition?", icon="warning") == "yes":
             self.quit()
+
+    def onQuit(self):
+        if not self.quitRequestProcessed:
+            #os.system("reboot")
+            self.quitRequestProcessed = True
 
 if __name__ == "__main__":
     app = InstallerApp()

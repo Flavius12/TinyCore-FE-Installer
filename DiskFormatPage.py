@@ -336,6 +336,8 @@ class NewPartitionDialog(tk.Toplevel):
         self.geometry("345x130+{}+{}".format(int(self.posX), int(self.posY)))
         #self.positionfrom(who="program")
         self.attributes('-topmost', True)
+        self.transient(parent)
+        self.resizable(False, False)
         self.title("Nuova partizione...")
         label15 = ttk.Label(self)
         label15.configure(relief="flat", takefocus=False, text='Tipo:')
