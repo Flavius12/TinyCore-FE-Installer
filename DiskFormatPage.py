@@ -11,7 +11,6 @@ EXTENDED = 1
 FREE = 2
 
 #FIXME leave 2048 sectors before first partition (to prevent bootloader installing failure)
-#FIXME unmount device before formatting (prevents can't inform kernel of partition changes)
 
 def getPartitions(disk):
     partitionList = list()
@@ -104,21 +103,26 @@ class DiskFormatPage(ttk.Frame):
                     firstDevice = device
                     break
             if firstDevice != None:
-                #Load Disk
-                try:
-                    disk = parted.newDisk(firstDevice)
-                except:
-                    disk = parted.freshDisk(firstDevice, "msdos")
-                disk.deleteAllPartitions()
-                freePartition = disk.getFreeSpacePartitions()[0]
-                geometry = freePartition.geometry;
-                geometry.start = max(2048, geometry.start) # Reserve first 2048 sectors for bootloader
-                fileSystem = parted.FileSystem(type="ext3", geometry=geometry)
-                partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=geometry)
-                partition.setFlag(parted.PARTITION_BOOT)
-                disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
-                disk.commit()
-                self.installerApp.navigateToPage("installPage",  (disk, partition, "ext3"))
+                if firstDevice.readOnly:
+                    messagebox.showerror("Disco in sola lettura", "Il disco è in sola lettura. È necessario disabilitare il write blocker per questo disco tramite il tool Block Dev")
+                elif firstDevice.busy:
+                    messagebox.showerror("Disco montato nel sistema", "Il disco è attualmente montato nel sistema. È necessario smontare il disco prima di continuare."
+                else:
+                    #Load Disk
+                    try:
+                        disk = parted.newDisk(firstDevice)
+                    except:
+                        disk = parted.freshDisk(firstDevice, "msdos")
+                    disk.deleteAllPartitions()
+                    freePartition = disk.getFreeSpacePartitions()[0]
+                    geometry = freePartition.geometry;
+                    geometry.start = max(2048, geometry.start) # Reserve first 2048 sectors for bootloader
+                    fileSystem = parted.FileSystem(type="ext3", geometry=geometry)
+                    partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=geometry)
+                    partition.setFlag(parted.PARTITION_BOOT)
+                    disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
+                    disk.commit()
+                    self.installerApp.navigateToPage("installPage",  (disk, partition, "ext3"))
             else:
                 messagebox.showerror("Nessun disco trovato", "Sul dispostivo non è presente alcun disco su cui è possibile installare il sistema")
                 '''
@@ -266,21 +270,44 @@ class CustomDiskFormatPage(ttk.Frame):
     def onButtonNextClick(self):
         if self.treeview1.selection():
             selectedPartition = self.partitionList[self.treeview1.item(self.treeview1.focus())['tags'][0]]
+            destPartition = None
+            addPartition = False
             if selectedPartition[0] == PRIMARY:
                 if messagebox.askquestion("Scrivere le modifiche sul disco?", "Proseguendo, si procederà con il partizionamento del disco {} e l'installazione del sistema sulla partizione {}. Continuare?\nATTENZIONE: TUTTI I DATI PRESENTI SUL DISCO SARANNO CANCELLATI".format(self.disks[self.combobox3.current()].device.path, selectedPartition[1].path), icon="warning") == "yes":
                     selectedPartition[1].setFlag(parted.PARTITION_BOOT)
-                    self.disks[self.combobox3.current()].commit()
-                    self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()], selectedPartition[1], "ext3"))
+                    destPartition = selectedPartition[1]
             elif selectedPartition[0] == FREE: #Format the partition now
                 if messagebox.askquestion("Scrivere le modifiche sul disco?", "Proseguendo, si procederà con il partizionamento del disco {} e l'installazione del sistema sulla partizione selezionata. Continuare?\nATTENZIONE: TUTTI I DATI PRESENTI SUL DISCO SARANNO CANCELLATI".format(self.disks[self.combobox3.current()].device.path), icon="warning") == "yes":
                     fileSystem = parted.FileSystem(type="ext3", geometry=selectedPartition[1].geometry)
                     partition = parted.Partition(disk=self.disks[self.combobox3.current()], type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=selectedPartition[1].geometry)
                     partition.setFlag(parted.PARTITION_BOOT)
-                    self.disks[self.combobox3.current()].addPartition(partition=partition, constraint=self.disks[self.combobox3.current()].device.optimalAlignedConstraint)
-                    self.disks[self.combobox3.current()].commit()
-                    self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()], partition, "ext3"))
+                    addPartition = True
+                    destPartition = partition
             else:
                 messagebox.showerror("Partizione non valida", "Il sistema può essere installato solo su partizioni primarie")
+            if destPartition:
+                ready = False
+                if self.disks[self.combobox3.current()].device.readOnly:
+                    messagebox.showerror("Disco in sola lettura", "Il disco è in sola lettura. È necessario disabilitare il write blocker per questo disco tramite il tool Block Dev")
+                elif destPartition.busy:
+                    if messagebox.askquestion("Partizione montata nel sistema", "La partizione selezionata è attualmente montata nel sistema. È necessario smontare la partizione per continuare. Smontare la partizione ora?", icon="warning") == "yes":
+                        os.system("umount /mnt/{}".format(os.path.basename(destPartition.path)))
+                        #Load Disk
+                        try:
+                            self.disks[self.combobox3.current()] = parted.newDisk(self.disks[self.combobox3.current()].device)
+                        except:
+                            self.disks[self.combobox3.current()] = parted.freshDisk(self.disks[self.combobox3.current()].device, "msdos")    
+                        ready = True
+                else:
+                    ready = True
+                if ready:
+                    if destPartition.busy:
+                        messagebox.showerror("Impossibile smontare la partizione", "Impossibile smontare la partizione. Riprovare.")
+                    else:
+                        if addPartition:
+                            self.disks[self.combobox3.current()].addPartition(partition=destPartition, constraint=self.disks[self.combobox3.current()].device.optimalAlignedConstraint)
+                        self.disks[self.combobox3.current()].commit()
+                        self.installerApp.navigateToPage("installPage", (self.disks[self.combobox3.current()], destPartition, "ext3"))
         else:
             messagebox.showerror("Nessuna partizione selezionata", "Selezionare la partizione in cui si desidera installare il sistema")
 

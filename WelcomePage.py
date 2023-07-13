@@ -18,12 +18,12 @@ class WelcomePage(ttk.Frame):
         label1.configure(
             font="{Arial} 16 {}",
             text="Benvenuto nell'installer di TinyCore Forensic Edition 3.0",
-            wraplength=320)
+            wraplength=300)
         label1.pack(anchor="w", side="top")
         label2 = ttk.Label(frame4)
         label2.configure(
             text='Seguendo questo installer potrai installare tinyCore...',
-            wraplength=320)
+            wraplength=300)
         label2.pack(anchor="w", pady=15, side="top")
         frame4.pack(
             anchor="n",

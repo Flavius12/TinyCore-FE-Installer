@@ -1,14 +1,13 @@
 from threading import Thread
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 from PIL import ImageTk, Image
 import os
 import stat
 import shutil
 from subprocess import Popen, PIPE
 import time
-
-#TODO Copy necessary files (only forensics tools part missing)
 
 def getDeviceUUID(device):
     response = Popen(["blkid", "-s", "UUID", "-o", "value", device], stdout=PIPE).communicate()
@@ -97,6 +96,8 @@ class InstallPage(ttk.Frame):
         self.installThread.start()
     
     def onFinishInstall(self):
+        if self.fullStatus == False:
+            messagebox.showerror("Installazione non completata correttamente", "Si sono verificati alcuni errori durante l'installazione del sistema. È consigliabile ripetere la procedura installazione nuovamente.")
         self.installerApp.navigateToPage("finishPage")
 
 class InstallThread(Thread):
@@ -105,9 +106,13 @@ class InstallThread(Thread):
         self.installPage = installPage
     
     def run(self):
+        self.installPage.fullStatus = True
         for item in self.installPage.actions:
             self.installPage.labelProgress["text"] = item.description
-            item.execute()
+            status = item.execute()
+            print(item.description + " " + str(status))
+            if self.installPage.fullStatus:
+                self.installPage.fullStatus = status #Update fullStatus to False on any error
             self.installPage.progressBar["value"] += 1
         self.installPage.onFinishInstall()
 
@@ -120,7 +125,7 @@ class Action:
 
 class Command(Action):
     def execute(self):
-        return os.system(self._params)
+        return os.system(self._params) == 0
     
 
 class Mount(Action):
@@ -131,8 +136,10 @@ class Mount(Action):
             super().__init__(params, description)
 
     def execute(self):
-        Mkdir("/mnt/{}".format(self._params)).execute()
-        Command("mount /dev/{} /mnt/{}".format(self._params, self._params)).execute()
+        self.status = Mkdir("/mnt/{}".format(self._params)).execute()
+        if self.status:
+            return Command("mount /dev/{} /mnt/{}".format(self._params, self._params)).execute()
+        return self.status
 
 class Unmount(Action):
     def __init__(self, params, description=""):
@@ -142,61 +149,83 @@ class Unmount(Action):
             super().__init__(params, description)
 
     def execute(self):
-        Command("umount /mnt/{}".format(self._params)).execute()
-        Rmdir("/mnt/{}".format(self._params)).execute()
+        self.status = Command("umount /dev/{}".format(self._params)).execute()
+        if self.status:
+            return Rmdir("/mnt/{}".format(self._params)).execute()
+        return self.status
     
 class Mkdir(Action):
     def __init__(self, params):
         super().__init__(params, "Creazione della cartella {}".format(params))
     def execute(self):
-        if os.path.isdir(self._params) == False:
-            os.mkdir(self._params)
+        try:
+            if os.path.isdir(self._params) == False:
+                os.mkdir(self._params)
+            return True
+        except:
+            return False
     
 class Rmdir(Action):
     def __init__(self, params):
         super().__init__(params, "Rimozione della cartella {}".format(params))
     def execute(self):
-        if os.path.isdir(self._params) == True:
-            shutil.rmtree(self._params)
+        try:
+            if os.path.isdir(self._params) == True:
+                shutil.rmtree(self._params)
+            return True
+        except:
+            return False
 
 class Copy(Action):
     def __init__(self, params):
         super().__init__(params, "Copia di {}".format(os.path.basename(params[0])))
     def execute(self):
-        os.makedirs(os.path.dirname(self._params[1]), exist_ok=True)
-        shutil.copy(self._params[0], self._params[1])
+        try:
+            os.makedirs(os.path.dirname(self._params[1]), exist_ok=True)
+            shutil.copy(self._params[0], self._params[1])
+            return True
+        except:
+            return False
 
 class Chmod(Action):
     def __init__(self, params):
         super().__init__(params, "Impostazione dei permessi su {}".format(os.path.basename(params[0])))
     def execute(self):
-        os.chmod(self._params[0], self._params[1])
+        try:
+            os.chmod(self._params[0], self._params[1])
+            return True
+        except:
+            return False
 
 class GrubConfigure(Action):
     def __init__(self, params):
         super().__init__(params, "Configurazione del bootloader grub")
     def execute(self):
-        deviceUUID = getDeviceUUID("/dev/{}".format(self._params[1]))
-        grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params[0]), "w")
-        grubConfigFile.write("set timeout=10\n")
-        grubConfigFile.write("set timeout_style=menu\n")
-        grubConfigFile.write("insmod ext3\n")
-        grubConfigFile.write("insmod all_video\n")
-        grubConfigFile.write("insmod efi_gop\n")
-        grubConfigFile.write("insmod efi_uga\n")
-        grubConfigFile.write("insmod ieee1275_fb\n")
-        grubConfigFile.write("insmod vbe\n")
-        grubConfigFile.write("insmod vga\n")
-        grubConfigFile.write("insmod video_bochs\n")
-        grubConfigFile.write("insmod video_cirrus\n")
-        grubConfigFile.write("insmod gfxterm\n")
-        grubConfigFile.write("insmod png\n")
-        grubConfigFile.write("terminal_output gfxterm\n")
-        grubConfigFile.write("search --no-floppy --fs-uuid --set=root {}\n".format(deviceUUID))
-        grubConfigFile.write("loadfont /boot/grub/fonts/unicode.pf2\n")
-        grubConfigFile.write("background_image /boot/grub/TCF.png\n")
-        grubConfigFile.write("menuentry \"TinyCore Forensics Edition\"{\n")
-        grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt=UUID={} home=UUID={} tce=UUID={}\n".format(deviceUUID, deviceUUID, deviceUUID)) 
-        grubConfigFile.write("\tinitrd /boot/core.gz\n")
-        grubConfigFile.write("}")
-        grubConfigFile.close()
+        try:
+            deviceUUID = getDeviceUUID("/dev/{}".format(self._params[1]))
+            grubConfigFile = open("{}/boot/grub/grub.cfg".format(self._params[0]), "w")
+            grubConfigFile.write("set timeout=10\n")
+            grubConfigFile.write("set timeout_style=menu\n")
+            grubConfigFile.write("insmod ext3\n")
+            grubConfigFile.write("insmod all_video\n")
+            grubConfigFile.write("insmod efi_gop\n")
+            grubConfigFile.write("insmod efi_uga\n")
+            grubConfigFile.write("insmod ieee1275_fb\n")
+            grubConfigFile.write("insmod vbe\n")
+            grubConfigFile.write("insmod vga\n")
+            grubConfigFile.write("insmod video_bochs\n")
+            grubConfigFile.write("insmod video_cirrus\n")
+            grubConfigFile.write("insmod gfxterm\n")
+            grubConfigFile.write("insmod png\n")
+            grubConfigFile.write("terminal_output gfxterm\n")
+            grubConfigFile.write("search --no-floppy --fs-uuid --set=root {}\n".format(deviceUUID))
+            grubConfigFile.write("loadfont /boot/grub/fonts/unicode.pf2\n")
+            grubConfigFile.write("background_image /boot/grub/TCF.png\n")
+            grubConfigFile.write("menuentry \"TinyCore Forensics Edition\"{\n")
+            grubConfigFile.write("\tlinux /boot/vmlinuz quiet opt=UUID={} home=UUID={} tce=UUID={}\n".format(deviceUUID, deviceUUID, deviceUUID)) 
+            grubConfigFile.write("\tinitrd /boot/core.gz\n")
+            grubConfigFile.write("}")
+            grubConfigFile.close()
+            return True
+        except:
+            return False
