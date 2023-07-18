@@ -7,7 +7,7 @@ class FinishPage(ttk.Frame):
     def __init__(self, installerApp, parent):
         ttk.Frame.__init__(self)
         self.installerApp = installerApp
-        bitmap = Image.open("res/wizard.png")
+        bitmap = Image.open("/usr/local/tcfe-setup/res/wizard.png")
         bitmapTk = ImageTk.PhotoImage(bitmap)
         pictureBox2 = tk.Label(self, image=bitmapTk)
         pictureBox2.configure(width=164, height=314)
@@ -37,7 +37,7 @@ class FinishPage(ttk.Frame):
 
     def onButtonNextClick(self):
         os.system("reboot")
-        self.installerApp.quit()
+        self.installerApp.quit(0)
 
     def onShow(self, params):
         self.installerApp.buttonBack["state"] = "disabled"

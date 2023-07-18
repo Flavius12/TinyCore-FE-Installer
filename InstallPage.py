@@ -22,7 +22,7 @@ class InstallPage(ttk.Frame):
         frame10.configure(height=50, width=200)
         frame11 = tk.Frame(frame10, background="white")
         frame11.configure(height=200, width=200)
-        bitmap = Image.open("res/header.png")
+        bitmap = Image.open("/usr/local/tcfe-setup/res/header.png")
         bitmapTk = ImageTk.PhotoImage(bitmap)
         pictureBox4 = tk.Label(frame11, image=bitmapTk)
         pictureBox4.configure(width=112, height=48)
@@ -67,8 +67,8 @@ class InstallPage(ttk.Frame):
         if params[2] != None:
             self.actions.append(Command("mkfs.{} {} -q -F".format(params[2], params[1].path), "Formattazione di {}".format(params[1].path)))
         self.actions.append(Mount(destinationDev, "Montaggio del disco di installazione"))
-        self.actions.append(Copy(("/tmp/setup/vmlinuz", "/mnt/{}/boot/vmlinuz".format(destinationDev)))) # Must be the PURE TinyCore vmlinuz file, as extracted from the original ISO
-        self.actions.append(Copy(("/tmp/setup/core.gz", "/mnt/{}/boot/core.gz".format(destinationDev)))) # Must be the PURE TinyCore core.gz file, as extracted from the original ISO
+        self.actions.append(Copy(("/home/tc/vmlinuz", "/mnt/{}/boot/vmlinuz".format(destinationDev)))) # Must be the PURE TinyCore vmlinuz file, as extracted from the original ISO
+        self.actions.append(Copy(("/home/tc/core.gz", "/mnt/{}/boot/core.gz".format(destinationDev)))) # Must be the PURE TinyCore core.gz file, as extracted from the original ISO
         # Copy extensions
         for file in self.recursiveListFiles("/tmp/builtin"):
             relPath = os.path.relpath(file, "/tmp/builtin")
@@ -78,16 +78,16 @@ class InstallPage(ttk.Frame):
             self.actions.append(Chmod((file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))
         # Change extensions configuration files permissions 
         self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
-        self.actions.append(Copy(("/opt/backgrounds/TCF.png", "/mnt/{}/opt/backgrounds/TCF.png".format(destinationDev))))
-        self.actions.append(Copy(("/home/tc/.setbackground", "/mnt/{}/home/tc/.setbackground".format(destinationDev))))
         # Copy volatility3
         for file in self.recursiveListFiles("/home/tc/volatility3-master"):
             relPath = os.path.relpath(file, "/home/tc/volatility3-master")
             self.actions.append(Copy((file, "/mnt/{}/home/tc/volatility3-master/{}".format(destinationDev, relPath))))
+        self.actions.append(Copy(("/opt/backgrounds/TCF.png", "/mnt/{}/opt/backgrounds/TCF.png".format(destinationDev))))
+        self.actions.append(Copy(("/home/tc/.setbackground", "/mnt/{}/home/tc/.setbackground".format(destinationDev))))
         self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(destinationDev, params[0].device.path), "Esecuzione di grub-install"))
         self.actions.append(Mkdir("/mnt/{}/boot/grub".format(destinationDev)))
         self.actions.append(Copy(("/opt/backgrounds/TCF.png", "/mnt/{}/boot/grub/TCF.png".format(destinationDev))))
-        self.actions.append(Copy(("/tmp/setup/ascii.pf2", "/mnt/{}/boot/grub/fonts/ascii.pf2".format(destinationDev))))
+        self.actions.append(Copy(("/home/tc/ascii.pf2", "/mnt/{}/boot/grub/fonts/ascii.pf2".format(destinationDev))))
         self.actions.append(GrubConfigure(("/mnt/{}".format(destinationDev), destinationDev)))
         self.actions.append(Unmount(destinationDev))
         #self.actions.append(Command("update-grub", "Esecuzione di update-grub"))

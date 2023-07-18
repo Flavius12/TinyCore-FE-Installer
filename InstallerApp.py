@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
@@ -73,13 +74,14 @@ class InstallerApp:
     def run(self):
         self.mainWindow.mainloop()
     
-    def quit(self):
+    def quit(self, code):
         self.onQuit()
         self.mainWindow.quit()
+        sys.exit(code)
 
     def askQuit(self):
         if messagebox.askquestion("Uscire dall'installazione?", "Vuoi uscire dall'installer di TinyCore Forensic Edition?", icon="warning") == "yes":
-            self.quit()
+            self.quit(1)
 
     def onQuit(self):
         if not self.quitRequestProcessed:
