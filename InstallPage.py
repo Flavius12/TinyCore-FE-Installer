@@ -80,9 +80,12 @@ class InstallPage(ttk.Frame):
         self.actions.append(Copy(("/home/tc/onboot.lst", "/mnt/{}/tce/onboot.lst".format(destinationDev))))
         self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
         # Copy volatility3
-        for file in self.recursiveListFiles("/home/tc/volatility3-master"):
-            relPath = os.path.relpath(file, "/home/tc/volatility3-master")
-            self.actions.append(Copy((file, "/mnt/{}/home/tc/volatility3-master/{}".format(destinationDev, relPath))))
+        for file in self.recursiveListFiles("/home/tc/volatility3"):
+            relPath = os.path.relpath(file, "/home/tc/volatility3")
+            self.actions.append(Copy((file, "/mnt/{}/home/tc/volatility3/{}".format(destinationDev, relPath))))
+            self.actions.append(Chown(("/mnt/{}/home/tc/volatility3/{}".format(destinationDev, relPath), "tc", "staff")))
+        self.actions.append(Chown(("/mnt/{}/home/tc".format(destinationDev), "tc", "staff")))
+        self.actions.append(Chown(("/mnt/{}/home".format(destinationDev), "tc", "staff")))
         self.actions.append(Copy(("/opt/backgrounds/TCF.png", "/mnt/{}/opt/backgrounds/TCF.png".format(destinationDev))))
         self.actions.append(Copy(("/home/tc/.setbackground", "/mnt/{}/home/tc/.setbackground".format(destinationDev))))
         self.actions.append(Command("grub-install --boot-directory=/mnt/{}/boot {}".format(destinationDev, params[0].device.path), "Esecuzione di grub-install"))
@@ -194,6 +197,16 @@ class Chmod(Action):
     def execute(self):
         try:
             os.chmod(self._params[0], self._params[1])
+            return True
+        except:
+            return False
+        
+class Chown(Action):
+    def __init__(self, params):
+        super().__init__(params, "Impostazione del proprietario su {}".format(os.path.basename(params[0])))
+    def execute(self):
+        try:
+            shutil.chown(self._params[0], self._params[1], self._params[2])
             return True
         except:
             return False
