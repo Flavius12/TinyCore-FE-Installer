@@ -36,7 +36,6 @@ class FinishPage(ttk.Frame):
         self.pack(side="top")
 
     def onButtonNextClick(self):
-        os.system("reboot")
         self.installerApp.quit(0)
 
     def onShow(self, params):

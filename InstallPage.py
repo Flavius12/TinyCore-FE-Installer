@@ -76,7 +76,8 @@ class InstallPage(ttk.Frame):
         # Change extensions permissions
         for file in self.recursiveListFiles("/mnt/{}/tce/optional".format(destinationDev)):
             self.actions.append(Chmod((file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))
-        # Change extensions configuration files permissions 
+        # Change extensions configuration files permissions
+        self.actions.append(Copy(("/home/tc/onboot.lst", "/mnt/{}/tce/onboot.lst".format(destinationDev))))
         self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
         # Copy volatility3
         for file in self.recursiveListFiles("/home/tc/volatility3-master"):
@@ -90,7 +91,7 @@ class InstallPage(ttk.Frame):
         self.actions.append(Copy(("/home/tc/ascii.pf2", "/mnt/{}/boot/grub/fonts/ascii.pf2".format(destinationDev))))
         self.actions.append(GrubConfigure(("/mnt/{}".format(destinationDev), destinationDev)))
         self.actions.append(Unmount(destinationDev))
-        #self.actions.append(Command("update-grub", "Esecuzione di update-grub"))
+        #self.actions.append(Command("update-grub", "Esecuzione di update-grub")) # Not needed
         self.progressBar["maximum"] = len(self.actions)
         self.installThread = InstallThread(self)
         self.installThread.start()

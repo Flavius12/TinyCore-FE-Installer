@@ -22,7 +22,7 @@ class WelcomePage(ttk.Frame):
         label1.pack(anchor="w", side="top")
         label2 = ttk.Label(frame4)
         label2.configure(
-            text='Seguendo questo installer potrai installare tinyCore...',
+            text='Il setup ti guiderà nell\'installazione di TinyCore Forensic Edition 3.0, un sistema operativo leggero dedicato all\'analisi forense.\n\nPremi Avanti per continuare.',
             wraplength=300)
         label2.pack(anchor="w", pady=15, side="top")
         frame4.pack(
