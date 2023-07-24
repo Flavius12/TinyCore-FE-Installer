@@ -119,7 +119,6 @@ class InstallThread(Thread):
         for item in self.installPage.actions:
             self.installPage.labelProgress["text"] = item.description
             status = item.execute()
-            print(item.description + " " + str(status))
             if self.installPage.fullStatus:
                 self.installPage.fullStatus = status #Update fullStatus to False on any error
             self.installPage.progressBar["value"] += 1
