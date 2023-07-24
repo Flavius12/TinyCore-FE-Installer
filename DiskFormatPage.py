@@ -94,9 +94,7 @@ class DiskFormatPage(ttk.Frame):
         if self.autoDiskFormat.get() == True:
             firstDevice = None
             for device in parted.getAllDevices():
-                if device.readOnly == False and re.match("^([^0-9]+)$", os.path.basename(device.path)): # Exclude readonly devices and CD/DVDs
-                    pass
-                else:
+                if re.match("^([^0-9]+)$", os.path.basename(device.path)): # Exclude readonly devices and CD/DVDs
                     firstDevice = device
                     break
             if firstDevice != None:
