@@ -103,7 +103,7 @@ class DiskFormatPage(ttk.Frame):
                 if firstDevice.readOnly:
                     messagebox.showerror("Disco in sola lettura", "Il disco è in sola lettura. È necessario disabilitare il write blocker per questo disco tramite il tool Block Dev")
                 elif firstDevice.busy:
-                    messagebox.showerror("Disco montato nel sistema", "Il disco è attualmente montato nel sistema. È necessario smontare il disco prima di continuare."
+                    messagebox.showerror("Disco montato nel sistema", "Il disco è attualmente montato nel sistema. È necessario smontare il disco prima di continuare.")
                 else:
                     #Load Disk
                     try:
