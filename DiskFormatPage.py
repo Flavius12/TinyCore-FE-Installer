@@ -10,8 +10,6 @@ PRIMARY = 0
 EXTENDED = 1
 FREE = 2
 
-#FIXME leave 2048 sectors before first partition (to prevent bootloader installing failure)
-
 def getPartitions(disk):
     partitionList = list()
     for primaryPartition in disk.getPrimaryPartitions():
@@ -120,7 +118,7 @@ class DiskFormatPage(ttk.Frame):
                     fileSystem = parted.FileSystem(type="ext3", geometry=geometry)
                     partition = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=geometry)
                     partition.setFlag(parted.PARTITION_BOOT)
-                    disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
+                    disk.addPartition(partition=partition, constraint=disk.device.minimalAlignedConstraint)
                     disk.commit()
                     self.installerApp.navigateToPage("installPage",  (disk, partition, "ext3"))
             else:
@@ -257,7 +255,7 @@ class CustomDiskFormatPage(ttk.Frame):
         if self.disks[self.combobox3.current()].primaryPartitionCount < self.disks[self.combobox3.current()].maxPrimaryPartitionCount:
             response = NewPartitionDialog(self.installerApp.mainWindow, self.disks[self.combobox3.current()], self.partitionList[self.treeview1.item(self.treeview1.focus())['tags'][0]][1]).response
             if response[0] == True:
-                self.disks[self.combobox3.current()].addPartition(partition=response[1], constraint=self.disks[self.combobox3.current()].device.optimalAlignedConstraint)
+                self.disks[self.combobox3.current()].addPartition(partition=response[1], constraint=self.disks[self.combobox3.current()].device.minimalAlignedConstraint)
                 self.loadPartitions(self.disks[self.combobox3.current()]) #Update partitions TreeView
         else:
             messagebox.showerror("Limite partizioni raggiunto", "Impossibile creare una nuova partizione: è stato raggiunto il limite di partizioni definibili sul disco.")
@@ -398,7 +396,8 @@ class NewPartitionDialog(tk.Toplevel):
         self.destroy()
 
     def onButtonOkClick(self):
-        self.partition.geometry.end = min(self.partition.geometry.end, self.partition.geometry.start + int(self.partitionSize.get() * 1024 * 1024 / self.disk.device.sectorSize))
+        self.partition.geometry.start = max(2048, self.partition.geometry.start) # Reserve first 2048 sectors for bootloader
+        self.partition.geometry.end = min(self.partition.geometry.end, self.partition.geometry.start + int(float(self.partitionSize.get()) * 1024 * 1024 / self.disk.device.sectorSize))
         if self.primaryPartition.get() == True:
             fileSystem = parted.FileSystem(type="ext3", geometry=self.partition.geometry)
             self.response = (True, parted.Partition(disk=self.disk, type=parted.PARTITION_NORMAL, fs=fileSystem, geometry=self.partition.geometry))

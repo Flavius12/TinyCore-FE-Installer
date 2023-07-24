@@ -68,7 +68,7 @@ class InstallPage(ttk.Frame):
             self.actions.append(Command("mkfs.{} {} -q -F".format(params[2], params[1].path), "Formattazione di {}".format(params[1].path)))
         self.actions.append(Mount(destinationDev, "Montaggio del disco di installazione"))
         self.actions.append(Copy(("/home/tc/vmlinuz", "/mnt/{}/boot/vmlinuz".format(destinationDev)))) # Must be the PURE TinyCore vmlinuz file, as extracted from the original ISO
-        self.actions.append(Copy(("/home/tc/core.gz", "/mnt/{}/boot/core.gz".format(destinationDev)))) # Must be the PURE TinyCore core.gz file, as extracted from the original ISO
+        self.actions.append(Copy(("/home/tc/core.gz", "/mnt/{}/boot/core.gz".format(destinationDev)))) # Must be the modified TinyCore core.gz file, extracted from the original ISO with forensics.rule added
         # Copy extensions
         for file in self.recursiveListFiles("/tmp/builtin"):
             relPath = os.path.relpath(file, "/tmp/builtin")
@@ -79,6 +79,11 @@ class InstallPage(ttk.Frame):
         # Change extensions configuration files permissions
         self.actions.append(Copy(("/home/tc/onboot.lst", "/mnt/{}/tce/onboot.lst".format(destinationDev))))
         self.actions.append(Chmod(("/mnt/{}/tce/onboot.lst".format(destinationDev), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)))    
+        # Copy OnDemand extensions
+        for file in self.recursiveListFiles("/home/tc/ondemand"):
+            relPath = os.path.relpath(file, "/home/tc/ondemand")
+            self.actions.append(Copy((file, "/mnt/{}/tce/ondemand/{}".format(destinationDev, relPath))))
+            self.actions.append(Chown(("/mnt/{}/tce/ondemand/{}".format(destinationDev, relPath), "tc", "staff")))
         # Copy volatility3
         for file in self.recursiveListFiles("/home/tc/volatility3"):
             relPath = os.path.relpath(file, "/home/tc/volatility3")
@@ -186,7 +191,7 @@ class Copy(Action):
     def execute(self):
         try:
             os.makedirs(os.path.dirname(self._params[1]), exist_ok=True)
-            shutil.copy(self._params[0], self._params[1])
+            shutil.copy(self._params[0], self._params[1], follow_symlinks=False)
             return True
         except:
             return False
