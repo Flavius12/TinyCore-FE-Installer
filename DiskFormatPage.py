@@ -92,8 +92,7 @@ class DiskFormatPage(ttk.Frame):
 
     def onButtonNextClick(self):
         if self.autoDiskFormat.get() == True:
-            #TODO Unlock later
-            '''firstDevice = None
+            firstDevice = None
             for device in parted.getAllDevices():
                 if device.readOnly == False and re.match("^([^0-9]+)$", os.path.basename(device.path)): # Exclude readonly devices and CD/DVDs
                     pass
@@ -123,7 +122,6 @@ class DiskFormatPage(ttk.Frame):
                     self.installerApp.navigateToPage("installPage",  (disk, partition, "ext3"))
             else:
                 messagebox.showerror("Nessun disco trovato", "Sul dispostivo non è presente alcun disco su cui è possibile installare il sistema")
-                '''
         else:
             self.installerApp.navigateToPage("customDiskFormatPage")
     
