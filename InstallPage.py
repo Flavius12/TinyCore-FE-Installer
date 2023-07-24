@@ -4,6 +4,8 @@ import tkinter.ttk as ttk
 from tkinter import messagebox
 from PIL import ImageTk, Image
 import os
+import pwd
+import grp
 import stat
 import shutil
 from subprocess import Popen, PIPE
@@ -210,7 +212,9 @@ class Chown(Action):
         super().__init__(params, "Impostazione del proprietario su {}".format(os.path.basename(params[0])))
     def execute(self):
         try:
-            shutil.chown(self._params[0], self._params[1], self._params[2])
+            user = pwd.getpwnam(self._params[1])[2]
+            group = grp.getgrnam(self._params[2])[2]
+            os.chown(self._params[0], user, group, follow_symlinks=False)
             return True
         except:
             return False
