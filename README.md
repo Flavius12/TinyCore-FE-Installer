@@ -6,7 +6,7 @@ Progetto di Tesi Magistrale in Sicurezza Informatica.
 
 *- docs/* Cartella contenente la **tesi**<br>
 *- res/* Cartella contenente varie risorse usate dall'installer (immagini e script)<br>
-*- src/* Cartella contenente i sorgenti dell'installer<br>
+*- src/* Cartella contenente i **sorgenti** dell'installer<br>
 *- tools/* Cartella contenente vari script e utility per la creazione del file ISO finale<br>
 
 ## Releases
