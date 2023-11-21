@@ -11,4 +11,4 @@ Progetto di Tesi Magistrale in Sicurezza Informatica.
 
 ## Releases
 
-È possibile scaricare la **ISO finale** alla pagina [Releases](https://github.com/Flavius12/TinyCore-FE-Installer/releases).
+È possibile scaricare la **ISO finale** o la **macchina virtuale preinstallata** alla pagina [Releases](https://github.com/Flavius12/TinyCore-FE-Installer/releases).
